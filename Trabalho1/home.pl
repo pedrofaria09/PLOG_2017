@@ -9,10 +9,10 @@ board([[v, v, v, v, v, v, v, v],
       [blank, v, v, v, v, v, v, blank],
       [blank, blank, v, v, v, v, blank, blank],
       [blank, blank, blank, blank, blank, blank, blank, blank],
-    	[blank, blank, blank, blank, blank, blank, blank, blank],
-    	[blank, blank, a, a, a, a, blank, blank],
-    	[blank, a, a, a, a, a, a, blank],
-    	[a, a, a, a, a, a, a, a]]).
+      [blank, blank, blank, blank, blank, blank, blank, blank],
+      [blank, blank, a, a, a, a, blank, blank],
+      [blank, a, a, a, a, a, a, blank],
+      [a, a, a, a, a, a, a, a]]).
 
 
 board_display(X,[L2|L2s]) :- write(X), Y is X+1, write('- '), display_line(L2), nl, display_line__(L2), nl, board_display(Y,L2s).
