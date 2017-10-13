@@ -1,4 +1,4 @@
-:- consult(aux).
+:- consult(auxiliar).
 
 % =========== Menus ===========
 menu :- cls,
@@ -21,7 +21,7 @@ menu_opt(TypeMenu) :- write('Por favor introduza a sua escolha'), nl,
 check_in_main_menu(In):- (In < 0 ; In > 3), nl, nl, write('!!AVISO!! Por favor escolha uma opcao entre 1 a 3'),nl ,nl, menu_opt(1).
 check_in_main_menu(1):- start.
 check_in_main_menu(2):- menu_mode.
-check_in_main_menu(3):- break.
+check_in_main_menu(3):- halt.
 
 menu_mode :- cls,
   write('==============================='),nl,
@@ -39,31 +39,44 @@ check_in_mode_menu(1):- write('Ply Vs Ply').
 check_in_mode_menu(2):- write('Ply Vs PC').
 check_in_mode_menu(3):- write('PC Vs PC').
 
-start :- initial(B1),
-  display_first_line("A","H",B1), nl,
-  board_display(1,B1).
+start :- display_game_area.
 
+display_game_area:-
+  cls,
+  initial(Board),
+  display_first_line("A","H",Board), nl,
+  board_display(1,Board),
+  info_display(1,Board).
+
+info_display(Jogada,Board):-
+  conta_pecas(b,Board,Nr_brancas),
+  conta_pecas(p,Board,Nr_pretas),
+  format('Jogada numero: ~d', [Jogada]), nl,
+  format('Numero de pecas brancas: ~w', [Nr_brancas]), nl,
+  format('Numero de pecas pretas: ~w', [Nr_pretas]), nl.
+
+move(BoardAtual,Linha,Conluna,NovaLinha,NovaColuna,BoardNova)
 
 % =========== BOARDS ===========
-initial([[v, v, v, v, v, v, v, v],
-      [none, v, v, v, v, v, v, none],
-      [none, none, v, v, v, v, none, none],
+initial([[p, p, p, p, p, p, p, p],
+      [none, p, p, p, p, p, p, none],
+      [none, none, p, p, p, p, none, none],
       [none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
-      [none, none, a, a, a, a, none, none],
-      [none, a, a, a, a, a, a, none],
-      [a, a, a, a, a, a, a, a]]).
+      [none, none, b, b, b, b, none, none],
+      [none, b, b, b, b, b, b, none],
+      [b, b, b, b, b, b, b, b]]).
 
-middle([[none, none, none, none, none, v, none, none],
-      [v, v, v, v, none, none, none, none],
-      [none, none, none, none, v, none, none, none],
-      [none, a, none, a, none, v, none, none],
-      [none, none, none, a, a, none, none, none],
-      [none, none, none, a, a, none, v, none],
-      [none, none, none, none, a, a, v, a],
+middle([[none, none, none, none, none, p, none, none],
+      [p, p, p, p, none, none, none, none],
+      [none, none, none, none, p, none, none, none],
+      [none, b, none, b, none, p, none, none],
+      [none, none, none, b, b, none, none, none],
+      [none, none, none, b, b, none, p, none],
+      [none, none, none, none, b, b, p, b],
       [none, none, none, none, none, none, none, none]]).
 
-end([[qa, none, none, none, none, none, none, none],
+end([[rb, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
@@ -92,18 +105,18 @@ display_line([]).
 display_underline([_|Es]) :- write('------'), display_underline(Es).
 display_underline([]) :- write(' ').
 
-display_first_line(Inicio, Fim, B1):- write('    '),
+display_first_line(Inicio, Fim, Board):- write('    '),
   Y is Inicio + 0,
   Inicio =< Fim,
   char_code(Imprime, Y),
   write(Imprime),
   write(' '),
   X is Y +1,
-  display_first_line(X, Fim, B1).
-display_first_line(_, _, B1) :- nl, write(' '), display_underline(B1).
+  display_first_line(X, Fim, Board).
+display_first_line(_, _, Board) :- nl, write(' '), display_underline(Board).
 
 translate(none,'  ').
-translate(v,' V').
-translate(a,' A').
-translate(qv,'qV').
-translate(qa,'qA').
+translate(p,' P').
+translate(b,' B').
+translate(rp,'rP').
+translate(rb,'rB').
