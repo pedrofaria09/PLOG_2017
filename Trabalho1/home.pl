@@ -39,23 +39,60 @@ check_in_mode_menu(1):- write('Ply Vs Ply').
 check_in_mode_menu(2):- write('Ply Vs PC').
 check_in_mode_menu(3):- write('PC Vs PC').
 
-start :- display_game_area.
+start :- initial(Board),
+  Jogada is 1,
+  ciclo_jogada(Board, Jogada).
 
-display_game_area:-
+ciclo_jogada(Board,Jogada):-
+  display_game_area(Board, Jogada),
+  joga(Jogada, Board, BoardNova),
+  NovaJogada is Jogada + 1,
+  ciclo_jogada(BoardNova, NovaJogada).
+
+display_game_area(Board,Jogada):-
   cls,
-  initial(Board),
   display_first_line("A","H",Board), nl,
   board_display(1,Board),
-  info_display(1,Board).
+  info_display(Jogada,Board).
 
 info_display(Jogada,Board):-
   conta_pecas(b,Board,Nr_brancas),
   conta_pecas(p,Board,Nr_pretas),
   format('Jogada numero: ~d', [Jogada]), nl,
-  format('Numero de pecas brancas: ~w', [Nr_brancas]), nl,
-  format('Numero de pecas pretas: ~w', [Nr_pretas]), nl.
+  format('Numero de damas brancas: ~w', [Nr_brancas]), nl,
+  format('Numero de damas pretas: ~w', [Nr_pretas]), nl, nl, nl.
 
-move(BoardAtual,Linha,Conluna,NovaLinha,NovaColuna,BoardNova)
+% =========== Play ===========
+verify_piece_player(Jogada,Linha,Coluna,BoardAtual):-
+  getElement(BoardAtual,Linha,Coluna,Peca),
+  ((Peca == none, write('!!AVISO!! Nao pode escolher uma casa vazia'),nl,fail);
+  (((par(Jogada),(Peca == p; Peca == rp));
+  (impar(Jogada),(Peca == b; Peca == rb)));
+  write('!!AVISO!! Nao pode escolher uma dama do adversario'),nl,fail)).
+
+ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual):-
+  ((par(Jogada), write('Jogam as pretas'));
+  impar(Jogada), write('Jogam as brancas')),nl,
+  repeat,
+  write('Introduza a linha da dama a mover:'),
+  getDigit(Linha),
+  write('Introduza a coluna da damas a mover:'),
+  getDigit(Coluna),
+  verify_piece_player(Jogada,Linha,Coluna,BoardAtual),
+  write('Introduza a nova linha:'),
+  getDigit(NovaLinha),
+  write('Introduza a nova coluna:'),
+  getDigit(NovaColuna).
+
+move(BoardAtual,Linha,Coluna,NovaLinha,NovaColuna,BoardNova2):-
+  getElement(BoardAtual,Linha,Coluna,PecaAntiga),
+  getElement(BoardAtual,NovaLinha,NovaColuna,PecaNova),
+  updateBoard(PecaAntiga,NovaLinha,NovaColuna,BoardAtual,BoardNova),
+  updateBoard(PecaNova,Linha,Coluna,BoardNova,BoardNova2).
+
+joga(Jogada, BoardAtual, BoardNova):-
+  ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual),
+  move(BoardAtual,Linha,Coluna,NovaLinha,NovaColuna,BoardNova).
 
 % =========== BOARDS ===========
 initial([[p, p, p, p, p, p, p, p],
