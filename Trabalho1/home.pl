@@ -47,12 +47,10 @@ ciclo_jogada(Board,Jogada):-
   display_game_area(Board, Jogada),
   joga(Jogada, Board, BoardNova),
   NovaJogada is Jogada + 1,
-  display_game_area(BoardNova, NovaJogada),
-  format('SAIIII ~d',[NovaJogada]).
-  %ciclo_jogada(BoardNova, NovaJogada).
+  ciclo_jogada(BoardNova, NovaJogada).
 
 display_game_area(Board,Jogada):-
-  %cls,
+  cls,
   display_first_line("A","H",Board), nl,
   board_display(1,Board),
   info_display(Jogada,Board).
@@ -89,29 +87,50 @@ ask_for_type_of_move(TipoDeMov):-
     ((TipoDeMov == 1; TipoDeMov == 2);write('!!AVISO!! Escolha entre 1 a 2'),nl,false),
   !.
 
-eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual):-
+eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   (Jogador == 1,
   AuxLinha is (Linha - NovaLinha),
   AuxColuna is (Coluna - NovaColuna),
   AuxColuna2 is abs(AuxColuna),
-  format('AuxLinha= ~d -- AuxColuna= ~d', [AuxLinha,AuxColuna]),nl,
   (
-    ((AuxLinha == 2, AuxColuna2 == 0),write('Sim este sim'),nl, Y is Linha + 1, X is Coluna, format('Y= ~d -- X= ~d', [Y,X]),nl);
-    ((AuxLinha == 0, AuxColuna2 == 2),write('Este nao!!!'),nl, Y is Linha, (NovaColuna > Coluna, X is Coluna + 1; X is Coluna - 1), format('Y= ~d -- X= ~d', [Y,X]),nl)
-  ), true
-  );write('NOOO'),false.
+    (
+      (AuxLinha == 2, AuxColuna2 == 0, Y is Linha - 1, X is Coluna, getElement(BoardAtual,Y,X,Peca), Peca\=none, updateBoard(none,Y,X,BoardAtual,NovaBoard));
+      (AuxLinha == 0, AuxColuna2 == 2, Y is Linha, (NovaColuna > Coluna, X is Coluna + 1; X is Coluna - 1), updateBoard(none,Y,X,BoardAtual,NovaBoard))
+    )
+  )
+  );
+  (Jogador == 2,
+  AuxLinha is (NovaLinha - Linha),
+  AuxColuna is (Coluna - NovaColuna),
+  AuxColuna2 is abs(AuxColuna),
+  (
+    (
+      (AuxLinha == 2, AuxColuna2 == 0, Y is Linha + 1, X is Coluna, getElement(BoardAtual,Y,X,Peca), Peca\=none, updateBoard(none,Y,X,BoardAtual,NovaBoard));
+      (AuxLinha == 0, AuxColuna2 == 2, Y is Linha, (NovaColuna > Coluna, X is Coluna + 1; X is Coluna - 1), updateBoard(none,Y,X,BoardAtual,NovaBoard))
+    )
+  )
+  );false.
 
-verify_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual):-
+verify_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard):-
   (TipoDeMov == 1,
   /* Se Aux 1, movimento simples para nao comer, se Aux1 = 0 ou 2, vai comer, movimento com dif. de duas casas */
   /* Jogador Brancas*/
-  (impar(Jogada),Aux1 is (Linha - NovaLinha), (Aux1 == 0; Aux1 == 2), eat_piece_simple(1,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual)),
-
-  /* COMUM AOS JOGADORES no movimento simples para nao comer */
-  (Aux1 == 1, Aux2 is (Coluna - NovaColuna), Aux22 is abs(Aux2), format('Aux2= ~d -- Aux22= ~d', [Aux2,Aux22]),nl, Aux22 >= 0, Aux22 =< 1);true);
+  (impar(Jogada),Aux1 is (Linha - NovaLinha), AuxColuna is (Coluna - NovaColuna), AuxColuna2 is abs(AuxColuna),
+    (
+      ((Aux1 == 0; Aux1 == 2), AuxColuna2 \=1, eat_piece_simple(1,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard));
+      (Aux1 == 1, (Aux2 is (Coluna - NovaColuna), Aux22 is abs(Aux2), Aux22 >= 0, Aux22 =< 1),NovaBoard=BoardAtual)
+    )
+  );/* Jogador Pretas*/
+  (par(Jogada),Aux1 is (NovaLinha - Linha), AuxColuna is (Coluna - NovaColuna), AuxColuna2 is abs(AuxColuna),
+    (
+      ((Aux1 == 0; Aux1 == 2), AuxColuna2 \=1, eat_piece_simple(2,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard));
+      (Aux1 == 1, (Aux2 is (Coluna - NovaColuna), Aux22 is abs(Aux2), Aux22 >= 0, Aux22 =< 1),NovaBoard=BoardAtual)
+    )
+  )
+  );
   write('!!AVISO!! Efetuou um moviento invalido'),nl,false.
 
-ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual):-
+ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   ((par(Jogada), write('Jogam as pretas'));
   impar(Jogada), write('Jogam as brancas')),nl,
   ask_for_type_of_move(TipoDeMov),
@@ -129,7 +148,7 @@ ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual):-
     getDigit(NovaColuna),
     verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
   !,
-  verify_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual).
+  verify_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard).
 
 move(BoardAtual,Linha,Coluna,NovaLinha,NovaColuna,BoardNova2):-
   getElement(BoardAtual,Linha,Coluna,PecaAntiga),
@@ -139,9 +158,9 @@ move(BoardAtual,Linha,Coluna,NovaLinha,NovaColuna,BoardNova2):-
 
 joga(Jogada, BoardAtual, BoardNova):-
   repeat,
-    ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual),
+    ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard),
   !,
-  move(BoardAtual,Linha,Coluna,NovaLinha,NovaColuna,BoardNova).
+  move(NovaBoard,Linha,Coluna,NovaLinha,NovaColuna,BoardNova).
 
 % =========== BOARDS ===========
 initial([[p, p, p, p, p, p, p, p],
