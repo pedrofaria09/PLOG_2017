@@ -65,20 +65,23 @@ info_display(Jogada,Board):-
 % =========== Play ===========
 verify_piece_player(Jogada,Linha,Coluna,BoardAtual):-
   getElement(BoardAtual,Linha,Coluna,Peca),
-  ((Peca == none, write('!!AVISO!! Nao pode escolher uma casa vazia'),nl,fail);
+  % Verifica se a casa escolhida e branca
+  ((Peca == none, write('!!AVISO!! Nao pode escolher uma casa vazia'),nl,false);
+  % Verifica o tipo de jogador, nao deixando escolher as pecas do outro jogador
   (((par(Jogada),(Peca == p; Peca == rp));
   (impar(Jogada),(Peca == b; Peca == rb)));
-  write('!!AVISO!! Nao pode escolher uma dama do adversario'),nl,fail)).
+  write('!!AVISO!! Nao pode escolher uma dama do adversario'),nl,false)).
 
 ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual):-
   ((par(Jogada), write('Jogam as pretas'));
   impar(Jogada), write('Jogam as brancas')),nl,
   repeat,
-  write('Introduza a linha da dama a mover:'),
-  getDigit(Linha),
-  write('Introduza a coluna da damas a mover:'),
-  getDigit(Coluna),
-  verify_piece_player(Jogada,Linha,Coluna,BoardAtual),
+    write('Introduza a linha da dama a mover:'),
+    getDigit(Linha),
+    write('Introduza a coluna da damas a mover:'),
+    getDigit(Coluna),
+    verify_piece_player(Jogada,Linha,Coluna,BoardAtual),
+  !,
   write('Introduza a nova linha:'),
   getDigit(NovaLinha),
   write('Introduza a nova coluna:'),
