@@ -1,4 +1,5 @@
 :- consult(auxiliar).
+:- consult(logic).
 
 % =========== Menus ===========
 menu :- cls,
@@ -39,16 +40,6 @@ check_in_mode_menu(1):- write('Ply Vs Ply').
 check_in_mode_menu(2):- write('Ply Vs PC').
 check_in_mode_menu(3):- write('PC Vs PC').
 
-start :- middle(Board),
-  Jogada is 1,
-  ciclo_jogada(Board, Jogada).
-
-ciclo_jogada(Board,Jogada):-
-  display_game_area(Board, Jogada),
-  joga(Jogada, Board, BoardNova),
-  NovaJogada is Jogada + 1,
-  ciclo_jogada(BoardNova, NovaJogada).
-
 display_game_area(Board,Jogada):-
   cls,
   display_first_line("A","H",Board), nl,
@@ -62,104 +53,6 @@ info_display(Jogada,Board):-
   format('Numero de damas brancas: ~w', [Nr_brancas]), nl,
   format('Numero de damas pretas: ~w', [Nr_pretas]), nl, nl, nl.
 
-% =========== Play ===========
-verify_piece_player(Jogada,Linha,Coluna,BoardAtual):-
-  getElement(BoardAtual,Linha,Coluna,Peca),
-  % Verifica se a casa escolhida e branca
-  ((Peca == none, write('!!AVISO!! Nao pode escolher uma casa vazia'),nl,!,false);
-  % Verifica o tipo de jogador, nao deixando escolher as pecas do outro jogador
-  (((par(Jogada),(Peca == p; Peca == rp));
-  (impar(Jogada),(Peca == b; Peca == rb)));
-  write('!!AVISO!! Nao pode escolher uma dama do adversario'),nl,!,false)).
-
-verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual):-
-  getElement(BoardAtual,NovaLinha,NovaColuna,Peca),
-  % Verifica se a nova peca e vazia, impossivel escolher uma do adversario ou sua
-  ((Peca == none);write('!!AVISO!! A sua nova posicao tem de ser vazia'),nl,false).
-
-
-ask_for_type_of_move(TipoDeMov):-
-  repeat,
-    write('Por favor escolha o tipo de movimento:'),nl,
-    write('1- Normal'),nl,
-    write('2- Linear'),nl,
-    getDigit(TipoDeMov),
-    ((TipoDeMov == 1; TipoDeMov == 2);write('!!AVISO!! Escolha entre 1 a 2'),nl,false),
-  !.
-
-eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
-  (
-    (
-      (Jogador == 1, AuxLinha is (Linha - NovaLinha));
-      (Jogador == 2, AuxLinha is (NovaLinha - Linha))
-    ),
-  AuxColuna is (Coluna - NovaColuna),
-  AuxColuna2 is abs(AuxColuna),
-  (
-    (
-      (AuxLinha == 2, AuxColuna2 == 0,
-        (
-          (Jogador == 1,Y is Linha - 1);
-          (Jogador == 2,Y is Linha + 1)
-        ),
-      X is Coluna, getElement(BoardAtual,Y,X,Peca), Peca\=none, updateBoard(none,Y,X,BoardAtual,NovaBoard));
-      (AuxLinha == 0, AuxColuna2 == 2, Y is Linha, (NovaColuna > Coluna, X is Coluna + 1; X is Coluna - 1), updateBoard(none,Y,X,BoardAtual,NovaBoard))
-    )
-  )
-  );false.
-
-verify_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard):-
-  (TipoDeMov == 1,
-  /* Se Aux 1, movimento simples para nao comer, se Aux1 = 0 ou 2, vai comer, movimento com dif. de duas casas */
-  (
-    (
-      (impar(Jogada),Aux1 is (Linha - NovaLinha));
-      (par(Jogada),Aux1 is (NovaLinha - Linha))
-    ), AuxColuna is (Coluna - NovaColuna), AuxColuna2 is abs(AuxColuna),
-    (
-      ((Aux1 == 0; Aux1 == 2), AuxColuna2 \=1,
-        (
-          (impar(Jogada), eat_piece_simple(1,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard));
-          (par(Jogada), eat_piece_simple(2,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard))
-        )
-      );
-      (Aux1 == 1, (Aux2 is (Coluna - NovaColuna), Aux22 is abs(Aux2), Aux22 >= 0, Aux22 =< 1),NovaBoard=BoardAtual)
-    )
-  )
-  );
-  write('!!AVISO!! Efetuou um moviento invalido'),nl,false.
-
-ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
-  ((par(Jogada), write('Jogam as pretas'));
-  impar(Jogada), write('Jogam as brancas')),nl,
-  ask_for_type_of_move(TipoDeMov),
-  repeat,
-    write('Introduza a linha da dama a mover:'),
-    getDigit(Linha),
-    write('Introduza a coluna da dama a mover:'),
-    getDigit(Coluna),
-    verify_piece_player(Jogada,Linha,Coluna,BoardAtual),
-  !,
-  repeat,
-    write('Introduza a nova linha:'),
-    getDigit(NovaLinha),
-    write('Introduza a nova coluna:'),
-    getDigit(NovaColuna),
-    verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
-  !,
-  verify_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard).
-
-move(BoardAtual,Linha,Coluna,NovaLinha,NovaColuna,BoardNova2):-
-  getElement(BoardAtual,Linha,Coluna,PecaAntiga),
-  getElement(BoardAtual,NovaLinha,NovaColuna,PecaNova),
-  updateBoard(PecaAntiga,NovaLinha,NovaColuna,BoardAtual,BoardNova),
-  updateBoard(PecaNova,Linha,Coluna,BoardNova,BoardNova2).
-
-joga(Jogada, BoardAtual, BoardNova):-
-  repeat,
-    ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard),
-  !,
-  move(NovaBoard,Linha,Coluna,NovaLinha,NovaColuna,BoardNova).
 
 % =========== BOARDS ===========
 initial([[p, p, p, p, p, p, p, p],
