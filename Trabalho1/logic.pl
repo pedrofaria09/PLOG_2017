@@ -12,7 +12,7 @@ joga(Jogada, BoardAtual, BoardNova):-
   repeat,
     ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard),
   !,
-  move(NovaBoard,Linha,Coluna,NovaLinha,NovaColuna,BoardNova).
+  move(Jogada,NovaBoard,Linha,Coluna,NovaLinha,NovaColuna,BoardNova).
 
 ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   ((par(Jogada), write('Jogam as pretas'));
@@ -46,8 +46,8 @@ ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   !,
   verify_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard).
 
-move(BoardAtual,Linha,Coluna,NovaLinha,NovaColuna,BoardNova2):-
-  getElement(BoardAtual,Linha,Coluna,PecaAntiga),
+move(Jogada,BoardAtual,Linha,Coluna,NovaLinha,NovaColuna,BoardNova2):-
+  (NovaLinha \= 1, NovaLinha \= 8, getElement(BoardAtual,Linha,Coluna,PecaAntiga);(par(Jogada), PecaAntiga = rp; PecaAntiga = rb)),
   getElement(BoardAtual,NovaLinha,NovaColuna,PecaNova),
   updateBoard(PecaAntiga,NovaLinha,NovaColuna,BoardAtual,BoardNova),
   updateBoard(PecaNova,Linha,Coluna,BoardNova,BoardNova2).

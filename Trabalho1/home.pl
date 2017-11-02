@@ -65,7 +65,7 @@ initial([[p, p, p, p, p, p, p, p],
       [b, b, b, b, b, b, b, b]]).
 
 middle([[none, none, none, none, none, p, none, none],
-      [p, p, p, none, none, none, none, none],
+      [p, p, p, none, b, none, none, none],
       [none, none, none, p, p, none, none, none],
       [none, b, none, b, none, p, none, none],
       [none, none, none, b, b, none, none, none],
