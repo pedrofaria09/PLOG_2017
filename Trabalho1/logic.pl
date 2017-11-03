@@ -47,7 +47,13 @@ ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   verify_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard).
 
 move(Jogada,BoardAtual,Linha,Coluna,NovaLinha,NovaColuna,BoardNova2):-
-  (NovaLinha \= 1, NovaLinha \= 8, getElement(BoardAtual,Linha,Coluna,PecaAntiga);(par(Jogada), PecaAntiga = rp; PecaAntiga = rb)),
+  (
+    NovaLinha \= 1, NovaLinha \= 8, getElement(BoardAtual,Linha,Coluna,PecaAntiga);
+    (
+      (par(Jogada), ((NovaLinha == 8, PecaAntiga = rp);(PecaAntiga = p)));
+      (impar(Jogada), NovaLinha == 1, (PecaAntiga = rb);(PecaAntiga = b))
+    )
+  ),
   getElement(BoardAtual,NovaLinha,NovaColuna,PecaNova),
   updateBoard(PecaAntiga,NovaLinha,NovaColuna,BoardAtual,BoardNova),
   updateBoard(PecaNova,Linha,Coluna,BoardNova,BoardNova2).
@@ -85,7 +91,7 @@ verify_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,No
       (par(Jogada),Aux1 is (NovaLinha - Linha))
     ), AuxColuna is (Coluna - NovaColuna), AuxColuna2 is abs(AuxColuna),
     (
-      ((Aux1 == 0; Aux1 == 2), AuxColuna2 \=1,
+      ((Aux1 == 0; Aux1 == 2; Aux1 == -2), AuxColuna2 \=1,
         (
           (impar(Jogada), eat_piece_simple(1,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard));
           (par(Jogada), eat_piece_simple(2,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard))
@@ -99,21 +105,16 @@ verify_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,No
 
 eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   (
-    (
-      (Jogador == 1, AuxLinha is (Linha - NovaLinha));
-      (Jogador == 2, AuxLinha is (NovaLinha - Linha))
-    ),
+  AuxLinha is (Linha - NovaLinha),
+  AuxLinha2 is abs(AuxLinha),
   AuxColuna is (Coluna - NovaColuna),
   AuxColuna2 is abs(AuxColuna),
   (
     (
-      (AuxLinha == 2, AuxColuna2 == 0,
-        (
-          (Jogador == 1,Y is Linha - 1);
-          (Jogador == 2,Y is Linha + 1)
-        ),
-      X is Coluna, getElement(BoardAtual,Y,X,Peca), Peca\=none, updateBoard(none,Y,X,BoardAtual,NovaBoard));
-      (AuxLinha == 0, AuxColuna2 == 2, Y is Linha, (NovaColuna > Coluna, X is Coluna + 1; X is Coluna - 1), updateBoard(none,Y,X,BoardAtual,NovaBoard))
+      /* Comer simples vertical */
+      (AuxLinha2 == 2, AuxColuna2 == 0, X is Coluna, (NovaLinha > Linha, Y is Linha + 1; Y is Linha - 1), getElement(BoardAtual,Y,X,Peca), Peca\=none, updateBoard(none,Y,X,BoardAtual,NovaBoard));
+      /* Comer simples horizontal */
+      (AuxLinha2 == 0, AuxColuna2 == 2, Y is Linha, (NovaColuna > Coluna, X is Coluna + 1; X is Coluna - 1), getElement(BoardAtual,Y,X,Peca), Peca\=none, updateBoard(none,Y,X,BoardAtual,NovaBoard))
     )
   )
   );false.
