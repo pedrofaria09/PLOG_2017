@@ -56,7 +56,7 @@ ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
 move(Jogada,BoardAtual,Linha,Coluna,NovaLinha,NovaColuna,BoardNova2):-
   (
     NovaLinha \= 1, NovaLinha \= 8, getElement(BoardAtual,Linha,Coluna,PecaAntiga);
-    (
+    ( /* Verifica se chegou a casa do adversario e atualiza para rei, verifica se volta para tras ao comer e nao altera o estado caso nao seja rei */
       (par(Jogada), ((NovaLinha == 8, PecaAntiga = rp);(getElement(BoardAtual,Linha,Coluna,PecaAntiga), NovaLinha == 1, PecaAntiga == rp, true);(PecaAntiga = p)));
       (impar(Jogada), ((NovaLinha == 1, PecaAntiga = rb);(getElement(BoardAtual,Linha,Coluna,PecaAntiga), NovaLinha == 8, PecaAntiga == rb, true);(PecaAntiga = b)))
     )
@@ -94,18 +94,18 @@ verify_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,No
   /* Se Aux 1, movimento simples para nao comer, se Aux1 = 0 ou 2, vai comer, movimento com dif. de duas casas */
   (
     (
-      (impar(Jogada),Aux1 is (Linha - NovaLinha));
-      (par(Jogada),Aux1 is (NovaLinha - Linha))
+      (impar(Jogada), Jogador is 1, Aux1 is (Linha - NovaLinha));
+      (par(Jogada),Jogador is 2, Aux1 is (NovaLinha - Linha))
     ), AuxColuna is (Coluna - NovaColuna), AuxColuna2 is abs(AuxColuna),
     (
-      ((Aux1 == 0; Aux1 == 2; Aux1 == -2), AuxColuna2 \= 1, eat_piece_simple(Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard));
+      ((Aux1 == 0; Aux1 == 2; Aux1 == -2), AuxColuna2 \= 1, eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard));
       (Aux1 == 1, (Aux2 is (Coluna - NovaColuna), Aux22 is abs(Aux2), Aux22 >= 0, Aux22 =< 1),NovaBoard=BoardAtual)
     )
   )
   );
   nl,write('!!AVISO!! Efetuou um moviento invalido'),nl,nl,false.
 
-eat_piece_simple(Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
+eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   (
   AuxLinha is (Linha - NovaLinha),
   AuxLinha2 is abs(AuxLinha),
@@ -114,27 +114,94 @@ eat_piece_simple(Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   (
     (
       /* Comer simples vertical */
-      (AuxLinha2 == 2, AuxColuna2 == 0, X is Coluna, (NovaLinha > Linha, Y is Linha + 1; Y is Linha - 1), getElement(BoardAtual,Y,X,Peca), Peca\=none, updateBoard(none,Y,X,BoardAtual,NovaBoard));
+      (AuxLinha2 == 2, AuxColuna2 == 0, X is Coluna,
+        (NovaLinha > Linha, Y is Linha + 1; Y is Linha - 1),
+        getElement(BoardAtual,Y,X,Peca),
+        Peca\=none, ((Jogador == 1, (Peca == p; Peca == rp));((Jogador == 2, (Peca == b; Peca == rb)))),
+        updateBoard(none,Y,X,BoardAtual,NovaBoard)
+      );
       /* Comer simples horizontal */
-      (AuxLinha2 == 0, AuxColuna2 == 2, Y is Linha, (NovaColuna > Coluna, X is Coluna + 1; X is Coluna - 1), getElement(BoardAtual,Y,X,Peca), Peca\=none, updateBoard(none,Y,X,BoardAtual,NovaBoard))
+      (AuxLinha2 == 0, AuxColuna2 == 2, Y is Linha,
+        (NovaColuna > Coluna, X is Coluna + 1; X is Coluna - 1),
+        getElement(BoardAtual,Y,X,Peca),
+        Peca\=none, ((Jogador == 1, (Peca == p; Peca == rp));((Jogador == 2, (Peca == b; Peca == rb)))),
+        updateBoard(none,Y,X,BoardAtual,NovaBoard)
+      )
     )
   )
   );false.
 
 verify_king_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   (
+    (
+      (impar(Jogada), Jogador is 1);
+      (par(Jogada), Jogador is 2)
+    ),
   AuxLinha is (Linha - NovaLinha),
   AuxLinhaABS is abs(AuxLinha),
   AuxColuna is (Coluna - NovaColuna),
   AuxColunaABS is abs(AuxColuna),
     (
-      /* Vertical */
-      ((AuxLinhaABS > 0, AuxColunaABS == 0),write('Vertical'),nl);
-      /* Horizontal */
-      ((AuxLinhaABS == 0, AuxColunaABS > 0),write('Horizontal'),nl);
-      /* Diagonal */
-      ((AuxLinhaABS > 0, AuxColunaABS > 0, AuxLinhaABS == AuxColunaABS),write('Diagonal'),nl)
-    ),
-  NovaBoard=BoardAtual
+      /* Vertical - TypeMove = 1 */
+      ((AuxLinhaABS > 0, AuxColunaABS == 0), Delta is AuxLinhaABS, check_king_eating(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,Delta,1,0), king_eat(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Delta,1));
+      /* Horizontal - TypeMove = 2 */
+      ((AuxLinhaABS == 0, AuxColunaABS > 0), Delta is AuxColunaABS, check_king_eating(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,Delta,2,0), king_eat(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Delta,2));
+      /* Diagonal - TypeMove = 3 */
+      ((AuxLinhaABS > 0, AuxColunaABS > 0, AuxLinhaABS == AuxColunaABS), Delta is AuxColunaABS,check_king_eating(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,Delta,3,0), king_eat(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Delta,3))
+    )
   );
   (nl,write('!!AVISO!! Movimento invalido do rei'),nl,nl,false).
+
+check_king_eating(_,_,_,_,_,_,0,_,0):-true.
+check_king_eating(_,_,_,_,_,_,0,_,1):-true.
+check_king_eating(_,_,_,_,_,_,_,_,2):-!,false.
+check_king_eating(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,Delta,TypeMove,Conta):-
+  (
+    (TypeMove == 1, X is Coluna, (NovaLinha > Linha, Y is Linha + 1; Y is Linha - 1), getElement(BoardAtual,Y,X,Peca), AuxDelta is Delta -1,
+      (
+        (Peca == none, !,check_king_eating(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDelta,1,Conta));
+        (Jogador == 1, (((Peca == b; Peca == rb), !,false);(Peca == p; Peca == rp), AuxConta is Conta + 1, !,check_king_eating(1,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDelta,1,AuxConta)));
+        (Jogador == 2, (((Peca == p; Peca == rp), !,false);(Peca == b; Peca == rb), AuxConta is Conta + 1, !,check_king_eating(2,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDelta,1,AuxConta)))
+      )
+    );
+    (TypeMove == 2, Y is Linha, (NovaColuna > Coluna, X is Coluna + 1; X is Coluna - 1), getElement(BoardAtual,Y,X,Peca), AuxDelta is Delta -1,
+      (
+        (Peca == none, !,check_king_eating(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDelta,2,Conta));
+        (Jogador == 1, (((Peca == b; Peca == rb), !,false);(Peca == p; Peca == rp), AuxConta is Conta + 1, !,check_king_eating(1,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDelta,2,AuxConta)));
+        (Jogador == 2, (((Peca == p; Peca == rp), !,false);(Peca == b; Peca == rb), AuxConta is Conta + 1, !,check_king_eating(2,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDelta,2,AuxConta)))
+      )
+    );
+    (TypeMove == 3, (NovaLinha > Linha, Y is Linha + 1; Y is Linha - 1), (NovaColuna > Coluna, X is Coluna + 1; X is Coluna - 1), getElement(BoardAtual,Y,X,Peca), AuxDelta is Delta -1,
+      (
+        (Peca == none, !,check_king_eating(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDelta,3,Conta));
+        (Jogador == 1, (((Peca == b; Peca == rb), !,false);(Peca == p; Peca == rp), AuxConta is Conta + 1, !,check_king_eating(1,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDelta,3,AuxConta)));
+        (Jogador == 2, (((Peca == p; Peca == rp), !,false);(Peca == b; Peca == rb), AuxConta is Conta + 1, !,check_king_eating(2,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDelta,3,AuxConta)))
+      )
+    )
+  ).
+
+king_eat(_,_,_,_,_,BoardAtual,NovaBoard,0,_):-NovaBoard = BoardAtual, true.
+king_eat(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Delta,TypeMove):-
+  (
+    (TypeMove == 1, X is Coluna, (NovaLinha > Linha, Y is Linha + 1; Y is Linha - 1), getElement(BoardAtual,Y,X,Peca), AuxDelta is Delta -1,
+      (
+        (Peca == none, !,king_eat(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,NovaBoard,AuxDelta,1));
+        (Jogador == 1, (Peca == p; Peca == rp), updateBoard(none,Y,X,BoardAtual,NovaBoard), !,king_eat(1,Y,X,NovaLinha,NovaColuna,NovaBoard,_,AuxDelta,1));
+        (Jogador == 2, (Peca == b; Peca == rb), updateBoard(none,Y,X,BoardAtual,NovaBoard), !,king_eat(2,Y,X,NovaLinha,NovaColuna,NovaBoard,_,AuxDelta,1))
+      )
+    );
+    (TypeMove == 2, Y is Linha, (NovaColuna > Coluna, X is Coluna + 1; X is Coluna - 1), getElement(BoardAtual,Y,X,Peca), AuxDelta is Delta -1,
+      (
+        (Peca == none, !,king_eat(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,NovaBoard,AuxDelta,2));
+        (Jogador == 1, (Peca == p; Peca == rp), updateBoard(none,Y,X,BoardAtual,NovaBoard), !,king_eat(1,Y,X,NovaLinha,NovaColuna,NovaBoard,_,AuxDelta,2));
+        (Jogador == 2, (Peca == b; Peca == rb), updateBoard(none,Y,X,BoardAtual,NovaBoard), !,king_eat(2,Y,X,NovaLinha,NovaColuna,NovaBoard,_,AuxDelta,2))
+      )
+    );
+    (TypeMove == 3, (NovaLinha > Linha, Y is Linha + 1; Y is Linha - 1), (NovaColuna > Coluna, X is Coluna + 1; X is Coluna - 1), getElement(BoardAtual,Y,X,Peca), AuxDelta is Delta -1,
+      (
+        (Peca == none, !,king_eat(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,NovaBoard,AuxDelta,3));
+        (Jogador == 1, (Peca == p; Peca == rp), updateBoard(none,Y,X,BoardAtual,NovaBoard), !,king_eat(1,Y,X,NovaLinha,NovaColuna,NovaBoard,_,AuxDelta,3));
+        (Jogador == 2, (Peca == b; Peca == rb), updateBoard(none,Y,X,BoardAtual,NovaBoard), !,king_eat(2,Y,X,NovaLinha,NovaColuna,NovaBoard,_,AuxDelta,3))
+      )
+    )
+  ).
