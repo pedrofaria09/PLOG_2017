@@ -41,7 +41,7 @@ check_in_mode_menu(2):- write('Ply Vs PC').
 check_in_mode_menu(3):- write('PC Vs PC').
 
 display_game_area(Board,Jogada):-
-  cls,
+  %cls,
   display_first_line("A","H",Board), nl,
   board_display(1,Board),
   info_display(Jogada,Board).
@@ -64,7 +64,7 @@ initial([[p, p, p, p, p, p, p, p],
       [none, b, b, b, b, b, b, none],
       [b, b, b, b, b, b, b, b]]).
 
-middle([[none, none, none, none, none, p, none, none],
+middle([[none, none, none, none, none, p, none, rb],
       [p, p, p, none, b, none, none, none],
       [none, none, none, p, p, none, none, none],
       [none, b, none, b, none, p, none, none],

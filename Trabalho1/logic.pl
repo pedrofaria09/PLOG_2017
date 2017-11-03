@@ -30,7 +30,9 @@ ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
       verify_line(Linha),
     !,
     verify_piece_player(Jogada,Linha,Coluna,BoardAtual),
+    (getElement(BoardAtual,Linha,Coluna,Peca), ((Peca == rb; Peca == rp), FlagKing = 1); FlagKing = 0),
   !,
+  write(FlagKing),
   repeat,
     repeat,
       write('Introduza a nova coluna:'),
@@ -91,19 +93,14 @@ verify_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,No
       (par(Jogada),Aux1 is (NovaLinha - Linha))
     ), AuxColuna is (Coluna - NovaColuna), AuxColuna2 is abs(AuxColuna),
     (
-      ((Aux1 == 0; Aux1 == 2; Aux1 == -2), AuxColuna2 \=1,
-        (
-          (impar(Jogada), eat_piece_simple(1,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard));
-          (par(Jogada), eat_piece_simple(2,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard))
-        )
-      );
+      ((Aux1 == 0; Aux1 == 2; Aux1 == -2), AuxColuna2 \= 1, eat_piece_simple(Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard));
       (Aux1 == 1, (Aux2 is (Coluna - NovaColuna), Aux22 is abs(Aux2), Aux22 >= 0, Aux22 =< 1),NovaBoard=BoardAtual)
     )
   )
   );
   nl,write('!!AVISO!! Efetuou um moviento invalido'),nl,nl,false.
 
-eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
+eat_piece_simple(Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   (
   AuxLinha is (Linha - NovaLinha),
   AuxLinha2 is abs(AuxLinha),
