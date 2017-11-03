@@ -49,8 +49,12 @@ display_game_area(Board,Jogada):-
 info_display(Jogada,Board):-
   conta_pecas(b,Board,Nr_brancas),
   conta_pecas(p,Board,Nr_pretas),
+  conta_pecas(rb,Board,Nr_rei_brancas),
+  conta_pecas(rp,Board,Nr_rei_pretas),
   format('Jogada numero: ~d', [Jogada]), nl,
   format('Numero de damas brancas: ~w', [Nr_brancas]), nl,
+  format('Numero de reis brancas: ~w', [Nr_rei_brancas]), nl,
+  format('Numero de reis pretos: ~w', [Nr_rei_pretas]), nl,
   format('Numero de damas pretas: ~w', [Nr_pretas]), nl, nl, nl.
 
 
@@ -71,7 +75,7 @@ middle([[none, none, none, none, none, p, none, rb],
       [none, p, none, b, b, none, none, none],
       [none, none, none, b, b, p, b, none],
       [none, none, none, none, b, b, p, b],
-      [none, none, none, none, none, none, none, none]]).
+      [rp, none, none, none, none, none, none, none]]).
 
 end([[rb, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],

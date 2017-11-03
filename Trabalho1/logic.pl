@@ -2,6 +2,7 @@ start :- middle(Board),
   Jogada is 1,
   ciclo_jogada(Board, Jogada).
 
+%ciclo_jogada(Board,4):-write('ACABOU').
 ciclo_jogada(Board,Jogada):-
   display_game_area(Board, Jogada),
   joga(Jogada, Board, BoardNova),
@@ -32,7 +33,8 @@ ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
     verify_piece_player(Jogada,Linha,Coluna,BoardAtual),
     (getElement(BoardAtual,Linha,Coluna,Peca), ((Peca == rb; Peca == rp), FlagKing = 1); FlagKing = 0),
   !,
-  write(FlagKing),
+  /* Nao pode escolher rei e movimento linear */
+  ((FlagKing == 1, TipoDeMov == 2, nl,write('!!AVISO!! Nao pode escolher o rei para o movimento linear.'),nl,nl,!,false);true),
   repeat,
     repeat,
       write('Introduza a nova coluna:'),
@@ -46,14 +48,17 @@ ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
     !,
     verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
   !,
-  verify_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard).
+  (
+    (FlagKing == 0, verify_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard));
+    (FlagKing == 1, verify_king_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard))
+  ).
 
 move(Jogada,BoardAtual,Linha,Coluna,NovaLinha,NovaColuna,BoardNova2):-
   (
     NovaLinha \= 1, NovaLinha \= 8, getElement(BoardAtual,Linha,Coluna,PecaAntiga);
     (
-      (par(Jogada), ((NovaLinha == 8, PecaAntiga = rp);(PecaAntiga = p)));
-      (impar(Jogada), NovaLinha == 1, (PecaAntiga = rb);(PecaAntiga = b))
+      (par(Jogada), ((NovaLinha == 8, PecaAntiga = rp);(getElement(BoardAtual,Linha,Coluna,PecaAntiga), NovaLinha == 1, PecaAntiga == rp, true);(PecaAntiga = p)));
+      (impar(Jogada), ((NovaLinha == 1, PecaAntiga = rb);(getElement(BoardAtual,Linha,Coluna,PecaAntiga), NovaLinha == 8, PecaAntiga == rb, true);(PecaAntiga = b)))
     )
   ),
   getElement(BoardAtual,NovaLinha,NovaColuna,PecaNova),
@@ -115,3 +120,21 @@ eat_piece_simple(Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
     )
   )
   );false.
+
+verify_king_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
+  (
+  AuxLinha is (Linha - NovaLinha),
+  AuxLinhaABS is abs(AuxLinha),
+  AuxColuna is (Coluna - NovaColuna),
+  AuxColunaABS is abs(AuxColuna),
+    (
+      /* Vertical */
+      ((AuxLinhaABS > 0, AuxColunaABS == 0),write('Vertical'),nl);
+      /* Horizontal */
+      ((AuxLinhaABS == 0, AuxColunaABS > 0),write('Horizontal'),nl);
+      /* Diagonal */
+      ((AuxLinhaABS > 0, AuxColunaABS > 0, AuxLinhaABS == AuxColunaABS),write('Diagonal'),nl)
+    ),
+  NovaBoard=BoardAtual
+  );
+  (nl,write('!!AVISO!! Movimento invalido do rei'),nl,nl,false).
