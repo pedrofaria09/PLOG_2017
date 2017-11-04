@@ -110,12 +110,36 @@ verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,N
       (Jogador == 2, Aux1 is (NovaLinha - Linha))
     ), AuxColuna is (Coluna - NovaColuna), AuxColuna2 is abs(AuxColuna),
     (
-      ((Aux1 == 0; Aux1 == 2; Aux1 == -2), AuxColuna2 \= 1, eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard));
+      ((Aux1 == 0; Aux1 == 2; Aux1 == -2), AuxColuna2 \= 1, eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard)); /*HERE TO CHECK IF CAN EAT MORE*/
       (Aux1 == 1, (Aux2 is (Coluna - NovaColuna), Aux22 is abs(Aux2), Aux22 >= 0, Aux22 =< 1),NovaBoard=BoardAtual)
     )
   )
   );
+  (TipoDeMov == 2,
+    (
+      (Jogador == 1, Linha > NovaLinha, DeltaLinha is (Linha - NovaLinha));
+      (Jogador == 2, NovaLinha > Linha, DeltaLinha is (NovaLinha - Linha))
+    ), AuxColuna is (Coluna - NovaColuna), DeltaColuna is abs(AuxColuna),
+    (
+      ((Aux is abs(DeltaLinha), Aux < 2; DeltaColuna == 1), nl,write('!!AVISO!! Movimento linear errado'),nl,nl,!,false);
+      (AuxDeltaLinha is DeltaLinha - 1, (DeltaColuna == 0, AuxDeltaColuna is 0; AuxDeltaColuna is DeltaColuna -1), check_if_is_pieces(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,AuxDeltaLinha, AuxDeltaColuna),NovaBoard = BoardAtual)
+    )
+  );
   nl,write('!!AVISO!! Efetuou um moviento invalido'),nl,nl,false.
+
+check_if_is_pieces(_,_,_,_,_,_,0,0).
+check_if_is_pieces(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,DeltaLinha,DeltaColuna):-
+  (Jogador == 1,
+    (DeltaColuna == 0, DeltaColuna \= DeltaLinha, (Y is Linha - 1, X is Coluna, getElement(BoardAtual,Y,X,Peca), Peca == b, AuxDeltaLinha is DeltaLinha -1, !,check_if_is_pieces(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDeltaLinha, DeltaColuna));
+    (DeltaColuna == DeltaLinha, (Y is Linha - 1, (NovaColuna > Coluna, X is Coluna + 1; X is Coluna - 1), getElement(BoardAtual,Y,X,Peca), Peca == b, AuxDeltaLinha is DeltaLinha - 1, AuxDeltaColuna is DeltaColuna - 1, !,check_if_is_pieces(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDeltaLinha,AuxDeltaColuna))))
+  );
+  (Jogador == 2,
+    (DeltaColuna == 0, DeltaColuna \= DeltaLinha,  (Y is Linha + 1, X is Coluna, getElement(BoardAtual,Y,X,Peca), Peca == p, AuxDeltaLinha is DeltaLinha -1, !,check_if_is_pieces(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDeltaLinha,DeltaColuna));
+    (DeltaColuna == DeltaLinha, (Y is Linha + 1, (NovaColuna > Coluna, X is Coluna + 1; X is Coluna - 1), getElement(BoardAtual,Y,X,Peca), Peca == p, AuxDeltaLinha is DeltaLinha - 1, AuxDeltaColuna is DeltaColuna - 1, !,check_if_is_pieces(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDeltaLinha,AuxDeltaColuna))))
+  );
+  !,false.
+
+%check_if_can_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard).
 
 eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   (
