@@ -1,4 +1,4 @@
-start :- middle(Board),
+start :- teste(Board),
   Jogada is 1,
   ciclo_jogada(Board, Jogada).
 
@@ -10,61 +10,59 @@ ciclo_jogada(Board,Jogada):-
   ciclo_jogada(BoardNova, NovaJogada).
 
 joga(Jogada, BoardAtual, BoardNova):-
+  ((par(Jogada), Jogador = 2);(impar(Jogada), Jogador = 1)),
   repeat,
-    ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard),
+    ask_for_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard),
   !,
-  move(Jogada,NovaBoard,Linha,Coluna,NovaLinha,NovaColuna,BoardNova).
+  move(Jogador,NovaBoard,Linha,Coluna,NovaLinha,NovaColuna,BoardNova).
 
-ask_for_play(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
-  ((par(Jogada), write('Jogam as pretas'));
-  impar(Jogada), write('Jogam as brancas')),nl,
+ask_for_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
+  ((Jogador == 2, write('Jogam as pretas'));
+  Jogador == 1, write('Jogam as brancas')),nl,
   ask_for_type_of_move(TipoDeMov),
   repeat,
-    repeat,
-      write('Introduza a coluna da dama a mover:'),
-      getChar(Coluna_Letra),
-      verify_column(Coluna_Letra,Coluna),
-    !,
-    repeat,
-      write('Introduza a linha da dama a mover:'),
-      getDigit(Linha),
-      verify_line(Linha),
-    !,
-    verify_piece_player(Jogada,Linha,Coluna,BoardAtual),
-    (getElement(BoardAtual,Linha,Coluna,Peca), ((Peca == rb; Peca == rp), FlagKing = 1); FlagKing = 0),
+    ask_for_initial_piece(Linha,Coluna),
+    verify_initial_piece_player(Jogador,Linha,Coluna,BoardAtual),
   !,
-  /* Nao pode escolher rei e movimento linear */
-  ((FlagKing == 1, TipoDeMov == 2, nl,write('!!AVISO!! Nao pode escolher o rei para o movimento linear.'),nl,nl,!,false);true),
+  verify_if_king_and_not_linear(BoardAtual,Linha,Coluna,FlagKing,TipoDeMov), /* Nao pode escolher rei e movimento linear */
   repeat,
-    repeat,
-      write('Introduza a nova coluna:'),
-      getChar(NovaColuna_Letra),
-      verify_column(NovaColuna_Letra,NovaColuna),
-    !,
-    repeat,
-      write('Introduza a nova linha:'),
-      getDigit(NovaLinha),
-      verify_line(NovaLinha),
-    !,
+    ask_for_new_piece(NovaLinha,NovaColuna),
     verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
   !,
   (
-    (FlagKing == 0, verify_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard));
-    (FlagKing == 1, verify_king_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard))
+    (FlagKing == 0, verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard));
+    (FlagKing == 1, verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard))
   ).
 
-move(Jogada,BoardAtual,Linha,Coluna,NovaLinha,NovaColuna,BoardNova2):-
-  (
-    NovaLinha \= 1, NovaLinha \= 8, getElement(BoardAtual,Linha,Coluna,PecaAntiga);
-    ( /* Verifica se chegou a casa do adversario e atualiza para rei, verifica se volta para tras ao comer e nao altera o estado caso nao seja rei */
-      (par(Jogada), ((NovaLinha == 8, PecaAntiga = rp);(getElement(BoardAtual,Linha,Coluna,PecaAntiga), NovaLinha == 1, PecaAntiga == rp, true);(PecaAntiga = p)));
-      (impar(Jogada), ((NovaLinha == 1, PecaAntiga = rb);(getElement(BoardAtual,Linha,Coluna,PecaAntiga), NovaLinha == 8, PecaAntiga == rb, true);(PecaAntiga = b)))
-    )
-  ),
+move(Jogador,BoardAtual,Linha,Coluna,NovaLinha,NovaColuna,BoardNova2):-
+  verify_piece_to_king(Jogador,BoardAtual,Linha,Coluna,NovaLinha,PecaAntiga),
   getElement(BoardAtual,NovaLinha,NovaColuna,PecaNova),
   updateBoard(PecaAntiga,NovaLinha,NovaColuna,BoardAtual,BoardNova),
   updateBoard(PecaNova,Linha,Coluna,BoardNova,BoardNova2).
 
+ask_for_initial_piece(Linha,Coluna):-
+  repeat,
+    write('Introduza a coluna da dama a mover:'),
+    getChar(Coluna_Letra),
+    verify_column(Coluna_Letra,Coluna),
+  !,
+  repeat,
+    write('Introduza a linha da dama a mover:'),
+    getDigit(Linha),
+    verify_line(Linha),
+  !.
+
+ask_for_new_piece(NovaLinha,NovaColuna):-
+  repeat,
+    write('Introduza a nova coluna:'),
+    getChar(NovaColuna_Letra),
+    verify_column(NovaColuna_Letra,NovaColuna),
+  !,
+  repeat,
+    write('Introduza a nova linha:'),
+    getDigit(NovaLinha),
+    verify_line(NovaLinha),
+  !.
 
 ask_for_type_of_move(TipoDeMov):-
   repeat,
@@ -75,13 +73,17 @@ ask_for_type_of_move(TipoDeMov):-
     ((TipoDeMov == 1; TipoDeMov == 2);nl,write('!!AVISO!! Escolha entre 1 a 2'),nl,nl,false),
   !.
 
-verify_piece_player(Jogada,Linha,Coluna,BoardAtual):-
+verify_if_king_and_not_linear(BoardAtual,Linha,Coluna,FlagKing,TipoDeMov):-
+  (getElement(BoardAtual,Linha,Coluna,Peca), ((Peca == rb; Peca == rp), FlagKing = 1); FlagKing = 0), /* Verifica se escolheu um rei */
+  ((FlagKing == 1, TipoDeMov == 2, nl,write('!!AVISO!! Nao pode escolher o rei para o movimento linear.'),nl,nl,!,false);true).
+
+verify_initial_piece_player(Jogador,Linha,Coluna,BoardAtual):-
   getElement(BoardAtual,Linha,Coluna,Peca),
   % Verifica se a casa escolhida e branca
   ((Peca == none, nl,write('!!AVISO!! Nao pode escolher uma casa vazia'),nl,nl,!,false);
   % Verifica o tipo de jogador, nao deixando escolher as pecas do outro jogador
-  (((par(Jogada),(Peca == p; Peca == rp));
-  (impar(Jogada),(Peca == b; Peca == rb)));
+  (((Jogador == 2,(Peca == p; Peca == rp));
+  (Jogador == 1,(Peca == b; Peca == rb)));
   nl,write('!!AVISO!! Nao pode escolher uma dama do adversario'),nl,nl,!,false)).
 
 verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual):-
@@ -89,13 +91,23 @@ verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual):-
   % Verifica se a nova peca e vazia, impossivel escolher uma do adversario ou sua
   ((Peca == none);nl,write('!!AVISO!! A sua nova posicao tem de ser vazia'),nl,nl,false).
 
-verify_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard):-
+/* Verifica se chegou a casa do adversario e muda para rei */
+verify_piece_to_king(Jogador,BoardAtual,Linha,Coluna,NovaLinha,PecaAntiga):-
+  (
+    NovaLinha \= 1, NovaLinha \= 8, getElement(BoardAtual,Linha,Coluna,PecaAntiga);
+    ( /* Verifica se chegou a casa do adversario e atualiza para rei, verifica se volta para tras ao comer e nao altera o estado caso nao seja rei */
+      (Jogador == 2, ((NovaLinha == 8, PecaAntiga = rp);(getElement(BoardAtual,Linha,Coluna,PecaAntiga), NovaLinha == 1, PecaAntiga == rp, true);(PecaAntiga = p)));
+      (Jogador == 1, ((NovaLinha == 1, PecaAntiga = rb);(getElement(BoardAtual,Linha,Coluna,PecaAntiga), NovaLinha == 8, PecaAntiga == rb, true);(PecaAntiga = b)))
+    )
+  ).
+
+verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard):-
   (TipoDeMov == 1,
   /* Se Aux 1, movimento simples para nao comer, se Aux1 = 0 ou 2, vai comer, movimento com dif. de duas casas */
   (
     (
-      (impar(Jogada), Jogador is 1, Aux1 is (Linha - NovaLinha));
-      (par(Jogada),Jogador is 2, Aux1 is (NovaLinha - Linha))
+      (Jogador == 1, Aux1 is (Linha - NovaLinha));
+      (Jogador == 2, Aux1 is (NovaLinha - Linha))
     ), AuxColuna is (Coluna - NovaColuna), AuxColuna2 is abs(AuxColuna),
     (
       ((Aux1 == 0; Aux1 == 2; Aux1 == -2), AuxColuna2 \= 1, eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard));
@@ -131,12 +143,8 @@ eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard)
   )
   );false.
 
-verify_king_movement(Jogada,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
+verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   (
-    (
-      (impar(Jogada), Jogador is 1);
-      (par(Jogada), Jogador is 2)
-    ),
   AuxLinha is (Linha - NovaLinha),
   AuxLinhaABS is abs(AuxLinha),
   AuxColuna is (Coluna - NovaColuna),
