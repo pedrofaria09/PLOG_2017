@@ -20,7 +20,7 @@ menu_opt(TypeMenu) :- write('Por favor introduza a sua escolha'), nl,
   (TypeMenu == 2, check_in_mode_menu(In))).
 
 check_in_main_menu(In):- (In < 0 ; In > 3), nl, nl, write('!!AVISO!! Por favor escolha uma opcao entre 1 a 3'),nl ,nl, menu_opt(1).
-check_in_main_menu(1):- start(1).
+check_in_main_menu(1):- start(2).
 check_in_main_menu(2):- menu_mode.
 check_in_main_menu(3):- halt.
 
