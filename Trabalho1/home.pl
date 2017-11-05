@@ -77,7 +77,7 @@ middle([[rb, none, none, rp, p, none, rp, rp],
         [p, none, rb, none, none, none, none, none],
         [none, none, none, rp, none, none, none, none]]).
 
-teste([[none, none, none, none, none, p, none, rb],
+teste([[none, none, none, none, none, b, none, rb],
       [p, p, p, none, b, none, none, none],
       [none, none, none, p, p, none, none, none],
       [none, b, none, b, none, p, none, none],
