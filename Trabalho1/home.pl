@@ -38,23 +38,23 @@ menu_mode :- cls,
 check_in_mode_menu(In):- (In < 0 ; In > 3), nl, nl, write('!!AVISO!! Por favor escolha uma opcao entre 1 a 3'),nl ,nl, menu_opt(2).
 check_in_mode_menu(1):- start(1).
 check_in_mode_menu(2):- start(2).
-check_in_mode_menu(3):- write('PC Vs PC').
+check_in_mode_menu(3):- start(3).
 
 display_game_area(Board,Jogada):-
-  %cls,
+  cls,
   display_first_line("A","H",Board), nl,
   board_display(1,Board),
   info_display(Jogada,Board).
 
 display_game_area_pc(Board,Jogada):-
-  %cls,
+  cls,
   display_first_line("A","H",Board), nl,
   board_display(1,Board),
   info_display(Jogada,Board),
   get_code(_).
 
 
-info_jogada_pc(Linha,Coluna,NovaLinha,NovaColuna):-
+info_jogada_pc(Tipo,Jogador,Linha,Coluna,NovaLinha,NovaColuna):-
   ((Coluna == 1, Letra_Coluna = 'A');
   (Coluna == 2, Letra_Coluna = 'B');
   (Coluna == 3, Letra_Coluna = 'C');
@@ -71,7 +71,8 @@ info_jogada_pc(Linha,Coluna,NovaLinha,NovaColuna):-
   (NovaColuna == 6, Letra_NovaColuna = 'F');
   (NovaColuna == 7, Letra_NovaColuna = 'G');
   (NovaColuna == 8, Letra_NovaColuna = 'H')),
-  write('Jogada do PC:'),nl,format('Pos. Inicial [~w,~d]',[Letra_Coluna,Linha]),nl,format('Pos. Final [~w,~d]',[Letra_NovaColuna,NovaLinha]),nl,nl,write('Clique por favor'),getChar(_).
+  ((Jogador == 1, write('Jogaram as brancas'),nl);(Jogador == 2, write('Jogaram as pretas'),nl)),
+  write('Jogada do PC:'),nl,format('Pos. Inicial [~w,~d]',[Letra_Coluna,Linha]),nl,format('Pos. Final [~w,~d]',[Letra_NovaColuna,NovaLinha]),nl,nl,(Tipo==2,write('Clique para continuar'),get_char(_);true).
 
 info_display(Jogada,Board):-
   conta_pecas(b,Board,Nr_brancas),
