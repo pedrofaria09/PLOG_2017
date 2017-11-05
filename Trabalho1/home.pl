@@ -86,6 +86,15 @@ teste([[none, none, none, none, none, b, none, rb],
       [none, none, none, none, b, b, p, b],
       [none, none, none, none, none, none, none, none]]).
 
+end2([[none, none, none, none, none, none, none, none],
+      [none, p, none, none, none, none, none, none],
+      [none, b, none, none, none, none, none, none],
+      [none, none, none, none, none, none, none, none],
+      [none, none, none, none, p, none, none, none],
+      [none, none, none, none, none, none, none, none],
+      [none, none, none, none, b, none, none, none],
+      [none, none, none, none, none, none, none, none]]).
+
 end([[rb, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],

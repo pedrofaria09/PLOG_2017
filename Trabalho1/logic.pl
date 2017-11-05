@@ -1,13 +1,25 @@
-start :- teste(Board),
+start :- end2(Board),
   Jogada is 1,
   ciclo_jogada(Board, Jogada).
 
-%ciclo_jogada(Board,4):-write('ACABOU').
+ciclo_jogada(Board,-1):-display_game_area(Board, 1),write('JOGADOR 1 PERDEU').
+ciclo_jogada(Board,-2):-display_game_area(Board, 2),write('JOGADOR 2 PERDEU').
 ciclo_jogada(Board,Jogada):-
   display_game_area(Board, Jogada),
   joga(Jogada, Board, BoardNova),
-  NovaJogada is Jogada + 1,
+  verify_end_game(BoardNova, Jogada, NovaJogada),
   ciclo_jogada(BoardNova, NovaJogada).
+
+verify_end_game(Board, Jogada, NovaJogada):-
+  conta_pecas(b,Board,Nr_brancas),
+  conta_pecas(p,Board,Nr_pretas),
+  conta_pecas(rb,Board,Nr_rei_brancas),
+  conta_pecas(rp,Board,Nr_rei_pretas),
+  (
+    ((Nr_brancas == 0, Nr_rei_brancas == 0),NovaJogada is -1);
+    ((Nr_pretas == 0, Nr_rei_pretas == 0),NovaJogada is -2);
+    (NovaJogada is Jogada + 1)
+  ).
 
 joga(Jogada, BoardAtual, BoardNova):-
   ((par(Jogada), Jogador = 2);(impar(Jogada), Jogador = 1)),
