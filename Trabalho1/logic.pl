@@ -1,8 +1,9 @@
 /*Tipo 1 - Player vs Player, Tipo 2 - Player vs PC, Tipo 3 - PC vs PC*/
 :-dynamic flagEated/1.
 :-dynamic flagCheckEated/1.
+:-dynamic flagKingEating/1.
 
-start(Tipo) :- teste(Board),
+start(Tipo) :- middle(Board),
   Jogada is 1,
   ciclo_jogada(Board, Jogada, Tipo).
 
@@ -37,22 +38,6 @@ joga(Jogada, BoardAtual, NovaBoard2, Tipo):-
   !,
   move(Jogador,NovaBoard,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard2).
 
-loop_to_check(_,_,_,_,1):-true.
-loop_to_check(_,_,8,8,0):-true.
-loop_to_check(Board,Jogador,X,Y,Reply):-
-  (
-    (getElement(Board,Y,X,Peca), ((Jogador == 1, Peca == b);(Jogador == 2, Peca == p)), Flag is 0, asserta(flagCheckEated(Flag)), check_hor_ver_normal_neighbours(Board,Jogador,X,Y),flagCheckEated(Reply2),(X < 8, AuxX is X + 1, AuxY is Y;Y < 8, AuxY is Y + 1, AuxX is 1), !,loop_to_check(Board,Jogador,AuxX,AuxY,Reply2));
-    ((X < 8, AuxX is X + 1, AuxY is Y;Y < 8, AuxY is Y + 1, AuxX is 1),!,loop_to_check(Board,Jogador,AuxX,AuxY,Reply))
-  ).
-
-check_hor_ver_normal_neighbours(Board,Jogador,X,Y):-
-  (
-    (AuxY is Y - 1, getElement(Board,AuxY,X,Peca), ((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))), AuxY2 is Y - 2, getElement(Board,AuxY2,X,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
-    (AuxX is X + 1, getElement(Board,Y,AuxX,Peca), ((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))), AuxX2 is X + 2, getElement(Board,Y,AuxX2,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
-    (AuxY is Y + 1, getElement(Board,AuxY,X,Peca), ((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))), AuxY2 is Y + 2, getElement(Board,AuxY2,X,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
-    (AuxX is X - 1, getElement(Board,Y,AuxX,Peca), ((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))), AuxX2 is X - 2, getElement(Board,Y,AuxX2,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true)
-  ).
-
 /***************** Player vs Player *******************/
 ask_for_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   ((Jogador == 2, write('Jogam as pretas'));
@@ -72,7 +57,7 @@ ask_for_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
     (FlagKing == 0, verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard,1));
     (FlagKing == 1, verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,1))
   ),
-  flagEated(FlagEated), ((FlagEated == 0, loop_to_check(NovaBoard,Jogador,1,1,0),flagCheckEated(Reply),((Reply == 1,nl,write('!!AVISO!! E obrigado a comer'),nl,nl,!,false);true));true).
+  flagEated(FlagEated), ((FlagEated == 0, loop_to_check_eaten(NovaBoard,Jogador,1,1,0),flagCheckEated(Reply),((Reply == 1,nl,write('!!AVISO!! E obrigado a comer'),nl,nl,!,false);true));true).
 
 /***************** Player vs PC *******************/
 ask_for_play_plr_vs_pc(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
@@ -349,4 +334,45 @@ king_eat(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Delta,Ty
         (Peca == none, !,king_eat(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,NovaBoard,AuxDelta,3))
       )
     )
+  ).
+
+loop_to_check_eaten(_,_,_,_,1):-true.
+loop_to_check_eaten(_,_,8,8,0):-true.
+loop_to_check_eaten(Board,Jogador,X,Y,Reply):-
+  (
+    (getElement(Board,Y,X,Peca), ((Jogador == 1, (Peca == b;Peca == rb));(Jogador == 2, (Peca == p;Peca == rp))),
+      Flag is 0, asserta(flagCheckEated(Flag)),
+      (
+        (Peca == p; Peca == b),check_hor_ver_normal_neighbours(Board,Jogador,X,Y);
+        (Peca == rp; Peca == rb),check_hor_ver_king_neighbours(Board,Jogador,X,Y)
+      ),flagCheckEated(Reply2),(X < 8, AuxX is X + 1, AuxY is Y;Y < 8, AuxY is Y + 1, AuxX is 1), !,loop_to_check_eaten(Board,Jogador,AuxX,AuxY,Reply2));
+    ((X < 8, AuxX is X + 1, AuxY is Y;Y < 8, AuxY is Y + 1, AuxX is 1),!,loop_to_check_eaten(Board,Jogador,AuxX,AuxY,Reply))
+  ).
+
+check_hor_ver_normal_neighbours(Board,Jogador,X,Y):-
+  (
+    (AuxY is Y - 1, getElement(Board,AuxY,X,Peca), ((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))), AuxY2 is Y - 2, getElement(Board,AuxY2,X,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
+    (AuxX is X + 1, getElement(Board,Y,AuxX,Peca), ((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))), AuxX2 is X + 2, getElement(Board,Y,AuxX2,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
+    (AuxY is Y + 1, getElement(Board,AuxY,X,Peca), ((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))), AuxY2 is Y + 2, getElement(Board,AuxY2,X,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
+    (AuxX is X - 1, getElement(Board,Y,AuxX,Peca), ((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))), AuxX2 is X - 2, getElement(Board,Y,AuxX2,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true)
+  ).
+
+loop_aux_king(_,_,_,_,0,_):-false.
+loop_aux_king(_,_,_,_,1,_):-true.
+loop_aux_king(Board,Jogador,X,Y,_,Tipo):-
+  (
+    (
+      (Tipo == 1, (Y > 0, AuxY is Y - 1, AuxX is X,asserta(flagKingEating(AuxY))));
+      (Tipo == 2, (X < 8, AuxY is Y, AuxX is X + 1,asserta(flagKingEating(AuxX))));
+      (Tipo == 3, (Y < 8, AuxY is Y + 1, AuxX is X,asserta(flagKingEating(AuxY))));
+      (Tipo == 4, (X > 0, AuxY is Y, AuxX is X - 1,asserta(flagKingEating(AuxX))))
+    ), getElement(Board,AuxY,AuxX,Peca), (((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))),loop_aux_king(Board,Jogador,AuxX,AuxY,1,Tipo);loop_aux_king(Board,Jogador,AuxX,AuxY,0,Tipo))
+  ).
+
+check_hor_ver_king_neighbours(Board,Jogador,X,Y):-
+  (
+    (loop_aux_king(Board,Jogador,X,Y,0,1), flagKingEating(AuxY2), AuxY is AuxY2 - 1, getElement(Board,AuxY,X,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
+    (loop_aux_king(Board,Jogador,X,Y,0,2), flagKingEating(AuxX2), AuxX is AuxX2 + 1, getElement(Board,Y,AuxX,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
+    (loop_aux_king(Board,Jogador,X,Y,0,3), flagKingEating(AuxY2), AuxY is AuxY2 + 1, getElement(Board,AuxY,X,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
+    (loop_aux_king(Board,Jogador,X,Y,0,4), flagKingEating(AuxX2), AuxX is AuxX2 - 1, getElement(Board,Y,AuxX,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true)
   ).

@@ -95,8 +95,8 @@ initial([[p, p, p, p, p, p, p, p],
       [none, b, b, b, b, b, b, none],
       [b, b, b, b, b, b, b, b]]).
 
-middle([[rb, none, none, rp, p, none, rp, rp],
-        [none, p, rp, b, none, none, none, none],
+middle([[rb, rp, none, rp, p, none, rp, rp],
+        [none, b, rp, b, none, none, none, none],
         [none, none, p, rb, b, none, none, none],
         [p, none, none, none, none, p, b, none],
         [none, none, p, none, none, none, none, none],
@@ -114,12 +114,12 @@ teste([[none, none, none, none, none, b, none, rb],
       [none, none, none, none, none, none, none, none]]).
 
 end2([[none, none, none, none, none, none, none, none],
-      [none, p, none, none, none, none, none, none],
-      [none, b, none, none, none, none, none, none],
+      [none, none, none, none, none, none, none, none],
+      [none, none, none, rb, none, none, none, none],
       [none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
-      [none, none, none, none, p, none, none, none],
-      [none, none, none, none, b, none, none, none],
+      [none, none, none, p, none, none, none, none],
+      [none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none]]).
 
 end([[rb, none, none, none, none, none, none, none],
