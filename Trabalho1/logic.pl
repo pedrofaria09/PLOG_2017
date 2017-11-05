@@ -1,14 +1,16 @@
-start :- end2(Board),
-  Jogada is 1,
-  ciclo_jogada(Board, Jogada).
+/*Tipo 1 - Player vs Player, Tipo 2 - Player vs PC, Tipo 3 - PC vs PC*/
 
-ciclo_jogada(Board,-1):-display_game_area(Board, 1),write('JOGADOR 1 PERDEU').
-ciclo_jogada(Board,-2):-display_game_area(Board, 2),write('JOGADOR 2 PERDEU').
-ciclo_jogada(Board,Jogada):-
+start(Tipo) :- teste(Board),
+  Jogada is 1,
+  ciclo_jogada(Board, Jogada, Tipo).
+
+ciclo_jogada(Board,-1,_):-display_game_area(Board, 1),write('PRETAS GANHOU').
+ciclo_jogada(Board,-2,_):-display_game_area(Board, 2),write('BRANCAS GANHOU').
+ciclo_jogada(Board,Jogada,Tipo):-
   display_game_area(Board, Jogada),
-  joga(Jogada, Board, BoardNova),
+  joga(Jogada, Board, BoardNova, Tipo),
   verify_end_game(BoardNova, Jogada, NovaJogada),
-  ciclo_jogada(BoardNova, NovaJogada).
+  ciclo_jogada(BoardNova, NovaJogada, Tipo).
 
 verify_end_game(Board, Jogada, NovaJogada):-
   conta_pecas(b,Board,Nr_brancas),
@@ -21,13 +23,19 @@ verify_end_game(Board, Jogada, NovaJogada):-
     (NovaJogada is Jogada + 1)
   ).
 
-joga(Jogada, BoardAtual, BoardNova):-
+joga(Jogada, BoardAtual, BoardNova, Tipo):-
   ((par(Jogada), Jogador = 2);(impar(Jogada), Jogador = 1)),
   repeat,
-    ask_for_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard),
+    (
+      (Tipo == 1, ask_for_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard));
+      (Tipo == 2, ask_for_play_plr_vs_pc(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard),
+        ((Jogador = 2, info_jogada_pc(Linha,Coluna,NovaLinha,NovaColuna));true)
+      )
+    ),
   !,
   move(Jogador,NovaBoard,Linha,Coluna,NovaLinha,NovaColuna,BoardNova).
 
+/***************** Player vs Player *******************/
 ask_for_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   ((Jogador == 2, write('Jogam as pretas'));
   Jogador == 1, write('Jogam as brancas')),nl,
@@ -42,9 +50,67 @@ ask_for_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
     verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
   !,
   (
-    (FlagKing == 0, verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard));
-    (FlagKing == 1, verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard))
+    (FlagKing == 0, verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard,1));
+    (FlagKing == 1, verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,1))
   ).
+
+/***************** Player vs PC *******************/
+ask_for_play_plr_vs_pc(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
+    ((Jogador == 1, write('Jogam as brancas'),nl);true),
+    ((Jogador == 1, ask_for_type_of_move(TipoDeMov));(Jogador == 2, ask_for_type_of_move_pc(TipoDeMov))),
+    repeat,
+      ((Jogador == 1, ask_for_initial_piece(Linha,Coluna));(Jogador == 2, ask_for_initial_piece_pc(Linha,Coluna))),
+      ((Jogador == 1, verify_initial_piece_player(Jogador,Linha,Coluna,BoardAtual));(Jogador == 2, verify_initial_piece_player_pc(Jogador,Linha,Coluna,BoardAtual))),
+    !,
+    ((Jogador == 1, verify_if_king_and_not_linear(BoardAtual,Linha,Coluna,FlagKing,TipoDeMov));(Jogador == 2, verify_if_king_and_not_linear_pc(BoardAtual,Linha,Coluna,FlagKing,TipoDeMov))),
+    repeat,
+      ((Jogador == 1, ask_for_new_piece(NovaLinha,NovaColuna));(Jogador == 2, ask_for_new_piece_pc(NovaLinha,NovaColuna))),
+      ((Jogador == 1, verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual));(Jogador == 2, verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual))),
+    !,
+    (
+      (FlagKing == 0, ((Jogador == 1, verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard,1));(Jogador == 2, verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard,0))));
+      (FlagKing == 1, ((Jogador == 1, verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,1));(Jogador == 2, verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,0))))
+    ).
+
+ask_for_initial_piece_pc(Linha,Coluna):-
+  repeat,
+    random(1,9,Coluna),
+    verify_line(Coluna),
+  !,
+  repeat,
+    random(1,9,Linha),
+    verify_line(Linha),
+  !.
+
+ask_for_new_piece_pc(NovaLinha,NovaColuna):-
+  repeat,
+    random(1,9,NovaColuna),
+    verify_line(NovaColuna),
+  !,
+  repeat,
+    random(1,9,NovaLinha),
+    verify_line(NovaLinha),
+  !.
+
+ask_for_type_of_move_pc(TipoDeMov):-
+  random(1,3,TipoDeMov).
+
+verify_if_king_and_not_linear_pc(BoardAtual,Linha,Coluna,FlagKing,TipoDeMov):-
+  (getElement(BoardAtual,Linha,Coluna,Peca), ((Peca == rb; Peca == rp), FlagKing = 1); FlagKing = 0), /* Verifica se escolheu um rei */
+  ((FlagKing == 1, TipoDeMov == 2,!,false);true).
+
+verify_initial_piece_player_pc(Jogador,Linha,Coluna,BoardAtual):-
+  getElement(BoardAtual,Linha,Coluna,Peca),
+  ((Peca == none,!,false);
+  (((Jogador == 2,(Peca == p; Peca == rp));
+  (Jogador == 1,(Peca == b; Peca == rb)));
+  !,false)).
+
+verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual):-
+  getElement(BoardAtual,NovaLinha,NovaColuna,Peca),
+  ((Peca == none);false).
+  
+/* ================================ END PC ================================ */
 
 move(Jogador,BoardAtual,Linha,Coluna,NovaLinha,NovaColuna,BoardNova2):-
   verify_piece_to_king(Jogador,BoardAtual,Linha,Coluna,NovaLinha,PecaAntiga),
@@ -113,7 +179,7 @@ verify_piece_to_king(Jogador,BoardAtual,Linha,Coluna,NovaLinha,PecaAntiga):-
     )
   ).
 
-verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard2):-
+verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard2,Warnings):-
   (TipoDeMov == 1,
   /* Se Aux 1, movimento simples para nao comer, se Aux1 = 0 ou 2, vai comer, movimento com dif. de duas casas */
   (
@@ -133,11 +199,11 @@ verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,N
       (Jogador == 2, NovaLinha > Linha, DeltaLinha is (NovaLinha - Linha))
     ), AuxColuna is (Coluna - NovaColuna), DeltaColuna is abs(AuxColuna),
     (
-      ((Aux is abs(DeltaLinha), Aux < 2; DeltaColuna == 1), nl,write('!!AVISO!! Movimento linear errado'),nl,nl,!,false);
+      ((Aux is abs(DeltaLinha), Aux < 2; DeltaColuna == 1), ((Warnings == 1, nl,write('!!AVISO!! Movimento linear errado'),nl,nl,!,false);!,false));
       (AuxDeltaLinha is DeltaLinha - 1, (DeltaColuna == 0, AuxDeltaColuna is 0; AuxDeltaColuna is DeltaColuna -1), check_if_is_pieces(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,AuxDeltaLinha, AuxDeltaColuna),NovaBoard2 = BoardAtual)
     )
   );
-  nl,write('!!AVISO!! Efetuou um moviento invalido'),nl,nl,false.
+  ((Warnings == 1, nl,write('!!AVISO!! Efetuou um moviento invalido'),nl,nl,false);false).
 
 /* Have a bug on last movement */
 check_if_can_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
@@ -198,7 +264,7 @@ eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard)
   )
   );false.
 
-verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
+verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Warnings):-
   (
   AuxLinha is (Linha - NovaLinha),
   AuxLinhaABS is abs(AuxLinha),
@@ -213,7 +279,7 @@ verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBo
       ((AuxLinhaABS > 0, AuxColunaABS > 0, AuxLinhaABS == AuxColunaABS), Delta is AuxColunaABS,check_king_eating(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,Delta,3,0), king_eat(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Delta,3))
     )
   );
-  (nl,write('!!AVISO!! Movimento invalido do rei'),nl,nl,false).
+  ((Warnings == 1, nl,write('!!AVISO!! Movimento invalido do rei'),nl,nl,false); false).
 
 check_king_eating(_,_,_,_,_,_,0,_,0):-true.
 check_king_eating(_,_,_,_,_,_,0,_,1):-true.

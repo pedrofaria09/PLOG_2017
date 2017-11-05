@@ -1,4 +1,5 @@
 :- use_module(library(lists)).
+:- use_module(library(random)).
 
 % Clear screen
 cls :- write('\e[2J').

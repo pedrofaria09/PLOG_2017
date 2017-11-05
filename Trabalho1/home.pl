@@ -20,7 +20,7 @@ menu_opt(TypeMenu) :- write('Por favor introduza a sua escolha'), nl,
   (TypeMenu == 2, check_in_mode_menu(In))).
 
 check_in_main_menu(In):- (In < 0 ; In > 3), nl, nl, write('!!AVISO!! Por favor escolha uma opcao entre 1 a 3'),nl ,nl, menu_opt(1).
-check_in_main_menu(1):- start.
+check_in_main_menu(1):- start(1).
 check_in_main_menu(2):- menu_mode.
 check_in_main_menu(3):- halt.
 
@@ -36,15 +36,42 @@ menu_mode :- cls,
   menu_opt(2).
 
 check_in_mode_menu(In):- (In < 0 ; In > 3), nl, nl, write('!!AVISO!! Por favor escolha uma opcao entre 1 a 3'),nl ,nl, menu_opt(2).
-check_in_mode_menu(1):- write('Ply Vs Ply').
-check_in_mode_menu(2):- write('Ply Vs PC').
+check_in_mode_menu(1):- start(1).
+check_in_mode_menu(2):- start(2).
 check_in_mode_menu(3):- write('PC Vs PC').
 
 display_game_area(Board,Jogada):-
-  %cls,
+  cls,
   display_first_line("A","H",Board), nl,
   board_display(1,Board),
   info_display(Jogada,Board).
+
+display_game_area_pc(Board,Jogada):-
+  cls,
+  display_first_line("A","H",Board), nl,
+  board_display(1,Board),
+  info_display(Jogada,Board),
+  get_code(_).
+
+
+info_jogada_pc(Linha,Coluna,NovaLinha,NovaColuna):-
+  ((Coluna == 1, Letra_Coluna = 'A');
+  (Coluna == 2, Letra_Coluna = 'B');
+  (Coluna == 3, Letra_Coluna = 'C');
+  (Coluna == 4, Letra_Coluna = 'D');
+  (Coluna == 5, Letra_Coluna = 'E');
+  (Coluna == 6, Letra_Coluna = 'F');
+  (Coluna == 7, Letra_Coluna = 'G');
+  (Coluna == 8, Letra_Coluna = 'H')),
+  ((NovaColuna == 1, Letra_NovaColuna = 'A');
+  (NovaColuna == 2, Letra_NovaColuna = 'B');
+  (NovaColuna == 3, Letra_NovaColuna = 'C');
+  (NovaColuna == 4, Letra_NovaColuna = 'D');
+  (NovaColuna == 5, Letra_NovaColuna = 'E');
+  (NovaColuna == 6, Letra_NovaColuna = 'F');
+  (NovaColuna == 7, Letra_NovaColuna = 'G');
+  (NovaColuna == 8, Letra_NovaColuna = 'H')),
+  write('Jogada do PC:'),nl,format('Pos. Inicial [~w,~d]',[Letra_Coluna,Linha]),nl,format('Pos. Final [~w,~d]',[Letra_NovaColuna,NovaLinha]),nl,nl,write('Clique por favor'),getChar(_).
 
 info_display(Jogada,Board):-
   conta_pecas(b,Board,Nr_brancas),
