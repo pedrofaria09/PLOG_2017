@@ -20,7 +20,7 @@ menu_opt(TypeMenu) :- write('Por favor introduza a sua escolha'), nl,
   (TypeMenu == 2, check_in_mode_menu(In))).
 
 check_in_main_menu(In):- (In < 0 ; In > 3), nl, nl, write('!!AVISO!! Por favor escolha uma opcao entre 1 a 3'),nl ,nl, menu_opt(1).
-check_in_main_menu(1):- start(2).
+check_in_main_menu(1):- start(1).
 check_in_main_menu(2):- menu_mode.
 check_in_main_menu(3):- halt.
 
@@ -41,13 +41,13 @@ check_in_mode_menu(2):- start(2).
 check_in_mode_menu(3):- write('PC Vs PC').
 
 display_game_area(Board,Jogada):-
-  cls,
+  %cls,
   display_first_line("A","H",Board), nl,
   board_display(1,Board),
   info_display(Jogada,Board).
 
 display_game_area_pc(Board,Jogada):-
-  cls,
+  %cls,
   display_first_line("A","H",Board), nl,
   board_display(1,Board),
   info_display(Jogada,Board),
@@ -117,8 +117,8 @@ end2([[none, none, none, none, none, none, none, none],
       [none, p, none, none, none, none, none, none],
       [none, b, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
-      [none, none, none, none, p, none, none, none],
       [none, none, none, none, none, none, none, none],
+      [none, none, none, none, p, none, none, none],
       [none, none, none, none, b, none, none, none],
       [none, none, none, none, none, none, none, none]]).
 
