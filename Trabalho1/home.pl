@@ -41,13 +41,13 @@ check_in_mode_menu(2):- start(2).
 check_in_mode_menu(3):- start(3).
 
 display_game_area(Board,Jogada):-
-  cls,
+  %cls,
   display_first_line("A","H",Board), nl,
   board_display(1,Board),
   info_display(Jogada,Board).
 
 display_game_area_pc(Board,Jogada):-
-  cls,
+  %cls,
   display_first_line("A","H",Board), nl,
   board_display(1,Board),
   info_display(Jogada,Board),
@@ -107,7 +107,7 @@ middle([[rb, rp, none, rp, p, none, rp, rp],
 
 teste([[none, none, none, none, none, b, none, rb],
       [p, p, p, none, b, none, none, none],
-      [none, none, none, p, p, none, none, none],
+      [none, none, none, p, p, none, p, none],
       [none, b, none, b, none, p, none, none],
       [none, p, none, b, b, none, none, none],
       [none, none, none, b, b, p, b, none],
