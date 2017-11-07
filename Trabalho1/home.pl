@@ -53,6 +53,9 @@ display_game_area_pc(Board,Jogada):-
   info_display(Jogada,Board),
   get_code(_).
 
+display_board(Board):-
+  display_first_line("A","H",Board), nl,
+  board_display(1,Board).
 
 info_jogada_pc(Tipo,Jogador,Linha,Coluna,NovaLinha,NovaColuna):-
   ((Coluna == 1, Letra_Coluna = 'A');
@@ -114,13 +117,31 @@ teste([[none, none, none, none, none, b, none, rb],
       [none, none, none, none, b, b, p, b],
       [none, none, none, none, none, none, none, none]]).
 
-end2([[none, none, none, none, none, none, none, none],
+end1([[none, none, none, none, none, none, none, none],
+      [none, none, none, none, none, p, none, none],
+      [none, none, none, none, p, none, none, none],
+      [none, none, none, none, none, p, b, none],
+      [none, none, b, none, none, none, none, none],
+      [none, none, none, b, none, none, none, none],
+      [none, p, b, none, none, none, none, none],
+      [none, none, none, none, none, none, none, none]]).
+
+end3([[none, none, none, none, none, b, none, none],
+      [none, none, none, none, rb, none, none, none],
       [none, none, none, none, none, none, none, none],
-      [none, none, none, rb, none, none, none, none],
+      [none, none, none, none, b, none, none, none],
+      [none, none, p, none, none, b, p, none],
+      [none, none, none, none, none, none, none, none],
+      [none, none, p, none, none, none, none, none],
+      [none, none, b, none, none, none, none, none]]).
+
+end2([[none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
       [none, none, none, p, none, none, none, none],
-      [none, none, none, none, none, none, none, none],
+      [none, none, p, none, p, none, none, none],
+      [none, none, b, none, none, none, none, none],
+      [none, none, none, none, none, none, p, none],
       [none, none, none, none, none, none, none, none]]).
 
 end([[rb, none, none, none, none, none, none, none],
@@ -128,6 +149,15 @@ end([[rb, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
+      [none, none, none, none, none, none, none, none],
+      [none, none, none, none, none, none, none, none],
+      [none, none, none, none, none, none, none, none]]).
+
+endX([[none, none, none, none, none, none, none, none],
+      [none, none, none, none, none, none, none, none],
+      [none, none, none, none, none, none, none, none],
+      [none, none, none, p, none, none, none, none],
+      [none, none, p, b, none, none, none, none],
       [none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none]]).
