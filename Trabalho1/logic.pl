@@ -3,11 +3,15 @@
 :-dynamic flagKingEating/1.
 :-dynamic jogada/1.
 
-/*Tipo 1 - Player vs Player, Tipo 2 - Player vs PC, Tipo 3 - PC vs PC*/
+% Predicado inicial que chama o ciclo de jogo
+% Tipo 1 - Player vs Player
+% Tipo 2 - Player vs PC
+% Tipo 3 - PC vs PC
 start(Tipo) :- teste(Board),
   Jogada is 1,
   ciclo_jogada(Board, Jogada, Tipo).
 
+% Predicado do ciclo do jogo, no qual recebe uma board, uma jogada e o tipo de jogo
 ciclo_jogada(Board,-1,_):-jogada(Jogada),display_game_area(Board, Jogada),write('PRETAS GANHOU!!').
 ciclo_jogada(Board,-2,_):-jogada(Jogada),display_game_area(Board, Jogada),write('BRANCAS GANHOU!!').
 ciclo_jogada(Board,Jogada,Tipo):-
@@ -16,6 +20,7 @@ ciclo_jogada(Board,Jogada,Tipo):-
   verify_end_game(BoardNova, Jogada, NovaJogada),
   ciclo_jogada(BoardNova, NovaJogada, Tipo).
 
+% Predicado que verifica se o jogo chegou ao final quando um jogador tem 0 damas e 0 reis.
 verify_end_game(Board, Jogada, NovaJogada):-
   conta_pecas(b,Board,Nr_brancas),
   conta_pecas(p,Board,Nr_pretas),
@@ -27,6 +32,9 @@ verify_end_game(Board, Jogada, NovaJogada):-
     (NovaJogada is Jogada + 1)
   ).
 
+% Predicado no qual chama os devidos predicados de jogada dependendo do tipo de jogo escolhido
+% Se o jogador for o PC, Tipo 1 ou 2, é escrito na consola a jogada realizada pelo mesmo
+% No final de ser verificada a jogada por cada um dos predicados chamados é feito o movimento.
 joga(Jogada, BoardAtual, NovaBoard2, Tipo):-
   ((par(Jogada), Jogador = 2);(impar(Jogada), Jogador = 1)),
   repeat,
@@ -43,6 +51,16 @@ joga(Jogada, BoardAtual, NovaBoard2, Tipo):-
   move(Jogador,NovaBoard,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard2).
 
 /***************** Player vs Player *******************/
+% Predicado importante na verificação do jogada no modo jogador humano vs jogador humano. Recebe um jogador e uma board atual
+% Devolve a linha e coluna da peça escolhida, a nova linha e nova coluna escolhida e uma nova board caso haja movimentos intermédios realizados (numa jogada o jogador pode comer 2 ou mais peças)
+% Começa por verificar qual o jogador a jogar e é identificado na consola, pergunta qual o tipo de movimento que quer realizar (Linear ou Simples) -> ask_for_type_of_move
+% Pergunta ao jogador pela linha e coluna da peça que deseja mover -> ask_for_initial_piece
+% Verifica se essa peça é sua -> verify_initial_piece_player
+% Verifica se a peça escolhida é rei ou não, pois o rei não pode ter um movimento Linear -> verify_if_king_and_not_linear
+% Pergunta ao jogador pela nova linha e nova coluna da peça a mover -> ask_for_new_piece
+% Verifica se a nova peça não é sua e nem é do jogador -> verifiy_new_piece_player
+% Dependendo da peça escolhida, dama normal ou rei, chama o predicado verify_movement e verify_king_movement, respetivamente e verifica todas as regras dessa jogada, caso alguma falhe, o jogador poderá repetir a jogada
+% No final deste predicado é verificado se o jogador comeu alguma peça, caso não tenha comido verifica se poderia ter comido alguma peça, caso possa, o jogador terá de repetir a jogada.
 ask_for_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   ((Jogador == 2, write('Jogam as pretas'));
   Jogador == 1, write('Jogam as brancas')),nl,
@@ -64,6 +82,9 @@ ask_for_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   flagEated(FlagEated), ((FlagEated == 0, loop_to_check_eaten(NovaBoard,Jogador,1,1,0),flagCheckEated(Reply),((Reply == 1,nl,write('!!AVISO!! E obrigado a comer'),nl,nl,!,false);true));true).
 
 /***************** Player vs PC *******************/
+% Predicado importante, semelhante ao ask_for_play do jogador humano vs jogador humano.
+% Este predicado trata do jogo humano vs jogo computador
+% O jogador 1 será sempre o jogador humano e jogador 2 o computador
 ask_for_play_plr_vs_pc(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   ((Jogador == 1, write('Jogam as brancas'),nl);true),
   FlagEat is 0, asserta(flagEated(FlagEat)),
@@ -84,6 +105,8 @@ ask_for_play_plr_vs_pc(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,Nova
   flagEated(FlagEated), ((FlagEated == 0, loop_to_check_eaten(NovaBoard,Jogador,1,1,0),flagCheckEated(Reply),((Reply == 1, Jogador == 1,nl,write('!!AVISO!! E obrigado a comer'),nl,nl,!,false);(Reply == 1, Jogador == 2,!,false);true));true).
 
 /***************** PC vs PC *******************/
+% Predicado importante, semelhante ao ask_for_play do jogador humano vs jogador humano.
+% Este predicado trata do jogo computador vs jogo computador
 ask_for_play_pc_vs_pc(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   FlagEat is 0, asserta(flagEated(FlagEat)),
   ask_for_type_of_move_pc(TipoDeMov),
@@ -102,6 +125,7 @@ ask_for_play_pc_vs_pc(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaB
   ),
   flagEated(FlagEated), ((FlagEated == 0, loop_to_check_eaten(NovaBoard,Jogador,1,1,0),flagCheckEated(Reply),((Reply == 1, !,false);true));true).
 
+% Devolve a linha e coluna de uma posicao random no modo jogador computador
 ask_for_initial_piece_pc(Linha,Coluna):-
   repeat,
     random(1,9,Coluna),
@@ -112,6 +136,7 @@ ask_for_initial_piece_pc(Linha,Coluna):-
     verify_line(Linha),
   !.
 
+% Devolve a nova linha e nova coluna de uma posicao random no modo jogador computador
 ask_for_new_piece_pc(NovaLinha,NovaColuna):-
   repeat,
     random(1,9,NovaColuna),
@@ -122,13 +147,20 @@ ask_for_new_piece_pc(NovaLinha,NovaColuna):-
     verify_line(NovaLinha),
   !.
 
+% Devolve o tipo de movimento no modo jogador computador, se 1 movimento simples, se 2 movimento linear
 ask_for_type_of_move_pc(TipoDeMov):-
   random(1,3,TipoDeMov).
 
+% Verifica se escolheu um movimento linear e uma dama normal não rei no modo jogador computador
+% Recebe uma Board, linha e coluna, verifica essa peça se é rei, se for rei o jogador não poderá ter escolhido o TipoDeMov == 2 (Movimento linear)
+% Se falhar o jogador irá repetir a jogada
 verify_if_king_and_not_linear_pc(BoardAtual,Linha,Coluna,FlagKing,TipoDeMov):-
   (getElement(BoardAtual,Linha,Coluna,Peca), ((Peca == rb; Peca == rp), FlagKing = 1); FlagKing = 0), /* Verifica se escolheu um rei */
   ((FlagKing == 1, TipoDeMov == 2,!,false);true).
 
+% Verifica se a peça inicial escolhida é sua no modo jogador computador
+% Recebe um jogador as posições da peça e a board atual
+% Se falhar o jogador irá repetir a jogada
 verify_initial_piece_player_pc(Jogador,Linha,Coluna,BoardAtual):-
   getElement(BoardAtual,Linha,Coluna,Peca),
   ((Peca == none,!,false);
@@ -136,18 +168,27 @@ verify_initial_piece_player_pc(Jogador,Linha,Coluna,BoardAtual):-
   (Jogador == 1,(Peca == b; Peca == rb)));
   !,false)).
 
+% Verifica se a nova peça escolhida é sua vazia modo jogador computador
+% Recebe um jogador as posições da peça e a board atual
+% Se falhar o jogador irá repetir a jogada
 verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual):-
   getElement(BoardAtual,NovaLinha,NovaColuna,Peca),
   ((Peca == none);false).
 
-/* ================================ END PC ================================ */
+/* ================================ END PC OLD AND NEW PIECES RULES ================================ */
 
+% Predicado importante que altera a board no final da jogada.
+% Depois de todas as regras de jogo terem sido verificados, este predicado irá mover as peças.
+% Recebe um jogador, uma board, as posicoes iniciais e as posicoes finais
+% Devolve uma nova board atualizada
 move(Jogador,BoardAtual,Linha,Coluna,NovaLinha,NovaColuna,BoardNova2):-
   verify_piece_to_king(Jogador,BoardAtual,Linha,Coluna,NovaLinha,PecaAntiga),
   getElement(BoardAtual,NovaLinha,NovaColuna,PecaNova),
   updateBoard(PecaAntiga,NovaLinha,NovaColuna,BoardAtual,BoardNova),
   updateBoard(PecaNova,Linha,Coluna,BoardNova,BoardNova2).
 
+
+% Pergunta ao utilizador pela posição da peça que deseja mover
 ask_for_initial_piece(Linha,Coluna):-
   repeat,
     write('Introduza a coluna da dama a mover:'),
@@ -160,6 +201,7 @@ ask_for_initial_piece(Linha,Coluna):-
     verify_line(Linha),
   !.
 
+% Pergunta ao utilizador pela posição da nova posição para onde deseja mover a peça
 ask_for_new_piece(NovaLinha,NovaColuna):-
   repeat,
     write('Introduza a nova coluna:'),
@@ -172,6 +214,9 @@ ask_for_new_piece(NovaLinha,NovaColuna):-
     verify_line(NovaLinha),
   !.
 
+% Pergunta ao utilizador pelo tipo de movimento
+% Retorna 1 se o movimento foi Normal, 2 se o movimento for Linear
+% Repete até escolher um tipo de movimento correto
 ask_for_type_of_move(TipoDeMov):-
   repeat,
     write('Por favor escolha o tipo de movimento:'),nl,
@@ -181,10 +226,16 @@ ask_for_type_of_move(TipoDeMov):-
     ((TipoDeMov == 1; TipoDeMov == 2);nl,write('!!AVISO!! Escolha entre 1 a 2'),nl,nl,false),
   !.
 
+% Verifica se escolheu um movimento linear e uma dama normal não rei no modo jogador humano
+% Recebe uma Board, linha e coluna, verifica essa peça se é rei, se for rei o jogador não poderá ter escolhido o TipoDeMov == 2 (Movimento linear)
+% Se falhar o jogador irá repetir a jogada
 verify_if_king_and_not_linear(BoardAtual,Linha,Coluna,FlagKing,TipoDeMov):-
   (getElement(BoardAtual,Linha,Coluna,Peca), ((Peca == rb; Peca == rp), FlagKing = 1); FlagKing = 0), /* Verifica se escolheu um rei */
   ((FlagKing == 1, TipoDeMov == 2, nl,write('!!AVISO!! Nao pode escolher o rei para o movimento linear.'),nl,nl,!,false);true).
 
+% Verifica se a peça inicial escolhida é sua no modo jogador humano
+% Recebe um jogador as posições da peça e a board atual
+% Se falhar o jogador é notificado do erro e irá repetir a jogada
 verify_initial_piece_player(Jogador,Linha,Coluna,BoardAtual):-
   getElement(BoardAtual,Linha,Coluna,Peca),
   % Verifica se a casa escolhida e branca
@@ -194,12 +245,15 @@ verify_initial_piece_player(Jogador,Linha,Coluna,BoardAtual):-
   (Jogador == 1,(Peca == b; Peca == rb)));
   nl,write('!!AVISO!! Nao pode escolher uma dama do adversario'),nl,nl,!,false)).
 
+% Verifica se a nova peça escolhida é sua vazia modo jogador humano
+% Recebe um jogador as posições da peça e a board atual
+% Se falhar o jogador é notificado do erro e irá repetir a jogada
 verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual):-
   getElement(BoardAtual,NovaLinha,NovaColuna,Peca),
   % Verifica se a nova peca e vazia, impossivel escolher uma do adversario ou sua
   ((Peca == none);nl,write('!!AVISO!! A sua nova posicao tem de ser vazia'),nl,nl,false).
 
-/* Verifica se chegou a casa do adversario e muda para rei */
+% Predicado auxiliar do move no qual verifica se chegou a casa do adversario e muda para rei
 verify_piece_to_king(Jogador,BoardAtual,Linha,Coluna,NovaLinha,PecaAntiga):-
   (
     NovaLinha \= 1, NovaLinha \= 8, getElement(BoardAtual,Linha,Coluna,PecaAntiga);
@@ -209,6 +263,15 @@ verify_piece_to_king(Jogador,BoardAtual,Linha,Coluna,NovaLinha,PecaAntiga):-
     )
   ).
 
+% Predicado importante na jogada. Depois do jogador ter escolhido as posições das peças este predicado tratará de verificar se as posições escolhidas são válidas para o tipo de mvimento escolhido.
+% Verifica se o jogador escolher o movimento simples, poderá apenas andar uma posição para a frente na vertical ou diagonal.
+% Verifica se o jogador escolher o movimento simples, vai comer uma peça na vertical ou horizontal.
+% Verifica se o jogador escolher o movimento simples, pode comer mais que uma peça na mesma jogada.
+% Verifica se o jogador escolher o movimento linear, não pode comer e apenas pode deslocar uma posicao na diagonal ou horizontal.
+% Se warnings == 0, não será mostrado na consola os erros da jogada (Evita sobrecarga no modo jogador computador), se warnings == 1, mostra os erros na jogada do jogador humano.
+% Caso falhe o jogador pode repetir a jogada
+% Recebe um jogador, as posições das peças, o tipo de movimento, a board atual e uma flag warnings.
+% Devolve uma nova board para o caso de serem comidas peças nesse movimento.
 verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard2,Warnings):-
   (TipoDeMov == 1,
   /* Se Aux 1, movimento simples para nao comer, se Aux1 = 0 ou 2, vai comer, movimento com dif. de duas casas */
@@ -236,6 +299,8 @@ verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,N
   ((Warnings == 1, nl,write('!!AVISO!! Efetuou um moviento invalido'),nl,nl,false);false).
 
 /* Have a bug on last movement */
+% Predicado auxiliar do verify_movement. Verifica se numa jogada o jogador pode comer 2 ou mais peças.
+% Apos o jogador ter escolhido a nova posicao, este predicado vai verificar nas suas adjacências (Vertical e horizontal) se a peça é do adversario e caso seja do adversario verifica se a peça a seguir a essa é vazia, podendo assim comer essa peça do adversario
 check_if_can_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   (format('Jogador=~d,Linha=~d,Coluna=~d,NovaLinha=~d,NovaColuna=~d',[Jogador,Linha,Coluna,NovaLinha,NovaColuna]),nl,nl,
     (Aux1 is (NovaColuna-1), getElement(BoardAtual,NovaLinha,Aux1,Peca), (Jogador == 1, (Peca == p; Peca == rp);Jogador == 2, (Peca == b; Peca == rb)),
@@ -256,6 +321,10 @@ check_if_can_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaB
       !,check_if_can_eat_more(Jogador,NovaLinha,NovaColuna,NovaLinha2,NovaColuna2,BoardNova2,_))
   );NovaLinha=Linha,NovaColuna=Coluna,NovaBoard=BoardAtual,format('ANTES DE SAIR: Jogador=~d,Linha=~d,Coluna=~d,NovaLinha=~d,NovaColuna=~d',[Jogador,Linha,Coluna,NovaLinha,NovaColuna]),nl,nl,true.
 
+% Predicado auxiliar importante do verify_movement no caso do movimento for linear. Verifica se este movimento é valido ou nao
+% Verifica se as pecas entre as posicoes iniciais e finais são do jogador em questão e não reis, Verifica se o movimento é realizado na diagonal ou horizontal.
+% Recebe um jogador, as posições das peças, a board atual e os deltas que indicam a diferença de casas das pecas escolhidas
+% Caso falhe o jogador repetirá a jogada
 check_if_is_pieces(_,_,_,_,_,_,0,0).
 check_if_is_pieces(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,DeltaLinha,DeltaColuna):-
   (Jogador == 1,
@@ -268,6 +337,10 @@ check_if_is_pieces(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,DeltaLin
   );
   !,false.
 
+% Predicado auxiliar importante do verify_movement. Tratará de verificar se o jogador pode ou não comer a peça do adversário (Rei ou dama)
+% Recebe um jogador, as posições das peças, a board atual e retorna uma nova board com as peças atualizadas
+% Atualiza na base de dados interna do prolog o predicado flagEated, importante para depois no final da jogada verificar se comeu alguma peça ou não nesta jogada.
+% Caso falhe o jogador repetirá a jogada
 eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   (
   AuxLinha is (Linha - NovaLinha),
@@ -294,6 +367,10 @@ eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard)
   )
   );false.
 
+% Predicado importante, chamado caso o jogador escolha uma peça rei. Trata de verificar se o movimento da peça rei foi realizado com sucesso e se irá comer peças.
+% Recebe um jogador, as posições das peças, a board atual e uma flag warnings. Retorna uma nova board com as peças atualizadas
+% Se warnings == 0, não será mostrado na consola os erros da jogada (Evita sobrecarga no modo jogador computador), se warnings == 1, mostra os erros na jogada do jogador humano.
+% Caso falhe o jogador repetirá a jogada
 verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Warnings):-
   (
   AuxLinha is (Linha - NovaLinha),
@@ -311,6 +388,13 @@ verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBo
   );
   ((Warnings == 1, nl,write('!!AVISO!! Movimento invalido do rei'),nl,nl,false); false).
 
+% Predicado chamado dentro do verify_king_movement, que apenas verifica se o jogador irá comer alguma peça pelo caminho.
+% Verifica se entre as posicoes escolhidas não tem nenhuma peça sua nem mais que uma peça do adversário, pois so pode comer uma de cada vez.
+% Verifica se o jogador pode comer na vertical e horizontal, nunca na horizontal.
+% Verifica se econtra uma peça do jogador adversário entre as posicoes escolhidas, e caso encontre, a peça a seguir ao do adversário terá de ser vazia.
+% Recebe um jogador, as posições das peças, a board atual, uma flag Delta(diferença de peças movidas), uma flag TypeMove(1 movimento horizontal, 2 movimento vertical, 3 movimento diagonal)
+% Recebe tambem um contador que é inicializado a 0 que conta o numero de peças do adversario encontradas nesse movimento, se duas ou mais falha.
+% Caso falhe o jogador repetirá a jogada
 check_king_eating(_,_,_,_,_,_,0,_,0):-true.
 check_king_eating(_,_,_,_,_,_,0,_,1):-true.
 check_king_eating(_,_,_,_,_,_,_,_,2):-!,false.
@@ -337,6 +421,8 @@ check_king_eating(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,Delta,Typ
     )
   ).
 
+% Predicado chamado dentro do verify_king_movement, semelhante ao check_king_eating, que tratará de atualizar a board caso o predicado check_king_eating suceda.
+% Recebe um jogador, as posições das peças, a board atual, uma flag Delta(diferença de peças movidas), uma flag TypeMove(1 movimento horizontal, 2 movimento vertical, 3 movimento diagonal)
 king_eat(_,_,_,_,_,BoardAtual,NovaBoard,0,_):-NovaBoard = BoardAtual, true.
 king_eat(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Delta,TypeMove):-
   (
@@ -361,6 +447,12 @@ king_eat(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Delta,Ty
     )
   ).
 
+% Predicado importante chamado no final do movimento caso o jogador não tenha comido nenhuma peça.
+% Precorrerá o tabuleiro a procura das peças do jogador em questão se for dama normal chamara o predicado check_hor_ver_normal_neighbours, se for rei chamara check_hor_ver_king_neighbours
+% Essas chamadas verificarão se existem peças dos adversários que podem ser comidas ou não.
+% Recebe a board atual, o jogador, X e Y inicializados a 1 para a varredura.
+% Retorna a resposta em Reply
+% O loop acaba quando encontrar uma peça do adversário que seja possível comer ou caso varra as posições todas e não encontre nenhuma
 loop_to_check_eaten(_,_,_,_,1):-true.
 loop_to_check_eaten(_,_,8,8,0):-true.
 loop_to_check_eaten(Board,Jogador,X,Y,Reply):-
@@ -374,6 +466,7 @@ loop_to_check_eaten(Board,Jogador,X,Y,Reply):-
     ((X < 8, AuxX is X + 1, AuxY is Y;Y < 8, AuxY is Y + 1, AuxX is 1),!,loop_to_check_eaten(Board,Jogador,AuxX,AuxY,Reply))
   ).
 
+% Predicado auxiliar de loop_to_check_eaten, que verificará se na adjacencia de X e Y existe uma peça do adversário que seja possível come-la e alterará a flag presente do predicado flagCheckEated.
 check_hor_ver_normal_neighbours(Board,Jogador,X,Y):-
   (
     (AuxY is Y - 1, getElement(Board,AuxY,X,Peca), ((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))), AuxY2 is Y - 2, getElement(Board,AuxY2,X,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
@@ -382,6 +475,16 @@ check_hor_ver_normal_neighbours(Board,Jogador,X,Y):-
     (AuxX is X - 1, getElement(Board,Y,AuxX,Peca), ((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))), AuxX2 is X - 2, getElement(Board,Y,AuxX2,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true)
   ).
 
+% Predicado auxiliar de loop_to_check_eaten, que verificará se nas posicções verticais ou horizontais de X e Y recorrendo o predicado loop_aux_king, existe uma peça do adversário que seja possível come-la e alterará a flag presente do predicado flagCheckEated.
+check_hor_ver_king_neighbours(Board,Jogador,X,Y):-
+  (
+    (loop_aux_king(Board,Jogador,X,Y,0,1), flagKingEating(AuxY2), AuxY is AuxY2 - 1, retract(flagKingEating(_)), getElement(Board,AuxY,X,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
+    (loop_aux_king(Board,Jogador,X,Y,0,2), flagKingEating(AuxX2), AuxX is AuxX2 + 1, retract(flagKingEating(_)), getElement(Board,Y,AuxX,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
+    (loop_aux_king(Board,Jogador,X,Y,0,3), flagKingEating(AuxY2), AuxY is AuxY2 + 1, retract(flagKingEating(_)), getElement(Board,AuxY,X,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
+    (loop_aux_king(Board,Jogador,X,Y,0,4), flagKingEating(AuxX2), AuxX is AuxX2 - 1, retract(flagKingEating(_)), getElement(Board,Y,AuxX,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true)
+  ).
+
+% Predicado auxiliar de check_hor_ver_king_neighbours que irá varrer a posicao X e Y na vertical ou horizontal a procura de uma peça do adversário, retornando a posicao coluna e linha desta peça.
 loop_aux_king(_,_,_,_,0,_):-false.
 loop_aux_king(_,_,_,_,1,_):-true.
 loop_aux_king(Board,Jogador,X,Y,_,Tipo):-
@@ -392,12 +495,4 @@ loop_aux_king(Board,Jogador,X,Y,_,Tipo):-
       (Tipo == 3, (Y < 8, AuxY is Y + 1, AuxX is X,asserta(flagKingEating(AuxY))));
       (Tipo == 4, (X > 0, AuxY is Y, AuxX is X - 1,asserta(flagKingEating(AuxX))))
     ), getElement(Board,AuxY,AuxX,Peca), (((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))),loop_aux_king(Board,Jogador,AuxX,AuxY,1,Tipo);loop_aux_king(Board,Jogador,AuxX,AuxY,0,Tipo))
-  ).
-
-check_hor_ver_king_neighbours(Board,Jogador,X,Y):-
-  (
-    (loop_aux_king(Board,Jogador,X,Y,0,1), flagKingEating(AuxY2), AuxY is AuxY2 - 1, retract(flagKingEating(_)), getElement(Board,AuxY,X,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
-    (loop_aux_king(Board,Jogador,X,Y,0,2), flagKingEating(AuxX2), AuxX is AuxX2 + 1, retract(flagKingEating(_)), getElement(Board,Y,AuxX,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
-    (loop_aux_king(Board,Jogador,X,Y,0,3), flagKingEating(AuxY2), AuxY is AuxY2 + 1, retract(flagKingEating(_)), getElement(Board,AuxY,X,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
-    (loop_aux_king(Board,Jogador,X,Y,0,4), flagKingEating(AuxX2), AuxX is AuxX2 - 1, retract(flagKingEating(_)), getElement(Board,Y,AuxX,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true)
   ).
