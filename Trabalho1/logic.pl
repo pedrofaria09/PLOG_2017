@@ -17,6 +17,7 @@ ciclo_jogada(Board,-1,_):-jogada(Jogada),display_game_area(Board, Jogada),write(
 ciclo_jogada(Board,-2,_):-jogada(Jogada),display_game_area(Board, Jogada),write('BRANCAS GANHOU!!').
 ciclo_jogada(Board,Jogada,Tipo):-
   (Tipo \= 3, display_game_area(Board, Jogada);true),
+  %display_game_area(Board, Jogada),
   joga(Jogada, Board, BoardNova, Tipo),
   verify_end_game(BoardNova, Jogada, NovaJogada),
   ciclo_jogada(BoardNova, NovaJogada, Tipo).
@@ -34,8 +35,11 @@ verify_end_game(Board, Jogada, NovaJogada):-
   ).
 
 % Predicado no qual chama os devidos predicados de jogada dependendo do tipo de jogo escolhido
-% Se o jogador for o PC, Tipo 1 ou 2, é escrito na consola a jogada realizada pelo mesmo
-% No final de ser verificada a jogada por cada um dos predicados chamados é feito o movimento.
+% Se o tipo for 1, Humano Vs Humano e chama o predicado ask_for_play
+% Se o tipo for 2, Humano Vs PC e chama o predicado ask_for_play_plr_vs_pc
+% Se o tipo for 3, Humano Vs PC e chama o predicado ask_for_play_pc_vs_pc
+% Apos ser verificada todas as regras da jogada dentro dos ask_for_play respetivos, é feito o movimento
+% No final verifica se o jogador pode comer mais peças no caso de ter comido uma peca durante o este movimento.
 joga(Jogada, BoardAtual, NovaBoard3, Tipo):-
   ((par(Jogada), Jogador = 2);(impar(Jogada), Jogador = 1)),
   repeat,
@@ -52,137 +56,8 @@ joga(Jogada, BoardAtual, NovaBoard3, Tipo):-
   move(Jogador,NovaBoard,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard2),
   check_can_eat_more(Jogador,NovaBoard2,NovaLinha,NovaColuna,Tipo,NovaBoard3).
 
-check_can_eat_more(Jogador,NovaBoard2,Linha,Coluna,Tipo,NovaBoard3):-
-  flagEated(FlagEated),
-  (
-    (FlagEated == 1, asserta(backBoard(NovaBoard2)),
-      (
-        (getElement(NovaBoard2,Linha,Coluna,Peca), (Peca == p; Peca == b),
-          (
-            ((Tipo == 1; (Tipo == 2, Jogador == 1)), check_if_can_eat_more_simple(Jogador,Linha,Coluna));
-            (check_if_can_eat_more_simple_pc(Jogador,Linha,Coluna))
-          )
-        );
-        (getElement(NovaBoard2,Linha,Coluna,Peca), (Peca == rp; Peca == rb),write('vou ver rei'),nl,nl)
-      ),
-      backBoard(NovaBoard3),retract(backBoard(_)),retract(flagEated(_)));
-    (NovaBoard3=NovaBoard2)
-  ).
-
-check_if_can_eat_more_king(Jogador,NovaLinha,NovaColuna).
-
-% Predicado importante do joga. No final do predicado joga, caso o jogador tenha comido, vai verificar se pode comer mais peças.
-% Apos o jogador ter escolhido a nova posicao, este predicado vai verificar nas suas adjacências (Vertical e horizontal) se a peça é do adversario e caso seja do adversario verifica se a peça a seguir a essa é vazia, podendo assim comer essa peça do adversario
-check_if_can_eat_more_simple_pc(Jogador,Linha,Coluna):-
-  (/*Para cima*/
-    backBoard(BoardAtual),
-    AuxLinha is (Linha-1), getElement(BoardAtual,AuxLinha,Coluna,Peca), ((Jogador == 1, (Peca == p; Peca == rp));(Jogador == 2, (Peca == b; Peca == rb))),
-    AuxLinha2 is (Linha-2), getElement(BoardAtual,AuxLinha2,Coluna,Peca2), Peca2 == none,
-    repeat,
-      ask_for_new_piece_pc(NovaLinha,NovaColuna),
-      verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
-      verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
-    !,
-    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
-    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple_pc(Jogador,NovaLinha,NovaColuna)
-  );
-  (/*Para Baixo*/
-    backBoard(BoardAtual),
-    AuxLinha is (Linha+1), getElement(BoardAtual,AuxLinha,Coluna,Peca), ((Jogador == 1, (Peca == p; Peca == rp));(Jogador == 2, (Peca == b; Peca == rb))),
-    AuxLinha2 is (Linha+2), getElement(BoardAtual,AuxLinha2,Coluna,Peca2), Peca2 == none,
-    repeat,
-      ask_for_new_piece_pc(NovaLinha,NovaColuna),
-      verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
-      verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
-    !,
-    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
-    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple_pc(Jogador,NovaLinha,NovaColuna)
-  );
-  (/*Para Direita*/
-    backBoard(BoardAtual),
-    AuxColuna is (Coluna+1), getElement(BoardAtual,Linha,AuxColuna,Peca), ((Jogador == 1, (Peca == p; Peca == rp));(Jogador == 2, (Peca == b; Peca == rb))),
-    AuxColuna2 is (Coluna+2), getElement(BoardAtual,Linha,AuxColuna2,Peca2), Peca2 == none,
-    repeat,
-      ask_for_new_piece_pc(NovaLinha,NovaColuna),
-      verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
-      verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
-    !,
-    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
-    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple_pc(Jogador,NovaLinha,NovaColuna)
-  );
-  (/*Para Esquerda*/
-    backBoard(BoardAtual),
-    AuxColuna is (Coluna-1), getElement(BoardAtual,Linha,AuxColuna,Peca), ((Jogador == 1, (Peca == p; Peca == rp));(Jogador == 2, (Peca == b; Peca == rb))),
-    AuxColuna2 is (Coluna-2), getElement(BoardAtual,Linha,AuxColuna2,Peca2), Peca2 == none,
-    repeat,
-      ask_for_new_piece_pc(NovaLinha,NovaColuna),
-      verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
-      verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
-    !,
-    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
-    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple_pc(Jogador,NovaLinha,NovaColuna)
-  );true.
-
-% Predicado importante do joga. No final do predicado joga, caso o jogador tenha comido, vai verificar se pode comer mais peças.
-% Apos o jogador ter escolhido a nova posicao, este predicado vai verificar nas suas adjacências (Vertical e horizontal) se a peça é do adversario e caso seja do adversario verifica se a peça a seguir a essa é vazia, podendo assim comer essa peça do adversario
-check_if_can_eat_more_simple(Jogador,Linha,Coluna):-
-  (/*Para cima*/
-    backBoard(BoardAtual),
-    AuxLinha is (Linha-1), getElement(BoardAtual,AuxLinha,Coluna,Peca), ((Jogador == 1, (Peca == p; Peca == rp));(Jogador == 2, (Peca == b; Peca == rb))),
-    AuxLinha2 is (Linha-2), getElement(BoardAtual,AuxLinha2,Coluna,Peca2), Peca2 == none, display_board(BoardAtual), write('Tera de comer a peca do advesario'),nl,
-    repeat,
-      ask_for_new_piece(NovaLinha,NovaColuna),
-      verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
-      verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,1),
-    !,
-    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple(Jogador,NovaLinha,NovaColuna)
-  );
-  (/*Para Baixo*/
-    backBoard(BoardAtual),
-    AuxLinha is (Linha+1), getElement(BoardAtual,AuxLinha,Coluna,Peca), ((Jogador == 1, (Peca == p; Peca == rp));(Jogador == 2, (Peca == b; Peca == rb))),
-    AuxLinha2 is (Linha+2), getElement(BoardAtual,AuxLinha2,Coluna,Peca2), Peca2 == none, display_board(BoardAtual), write('Tera de comer a peca do advesario'),nl,
-    repeat,
-      ask_for_new_piece(NovaLinha,NovaColuna),
-      verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
-      verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,1),
-    !,
-    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple(Jogador,NovaLinha,NovaColuna)
-  );
-  (/*Para Direita*/
-    backBoard(BoardAtual),
-    AuxColuna is (Coluna+1), getElement(BoardAtual,Linha,AuxColuna,Peca), ((Jogador == 1, (Peca == p; Peca == rp));(Jogador == 2, (Peca == b; Peca == rb))),
-    AuxColuna2 is (Coluna+2), getElement(BoardAtual,Linha,AuxColuna2,Peca2), Peca2 == none, display_board(BoardAtual), write('Tera de comer a peca do advesario'),nl,
-    repeat,
-      ask_for_new_piece(NovaLinha,NovaColuna),
-      verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
-      verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,1),
-    !,
-    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple(Jogador,NovaLinha,NovaColuna)
-  );
-  (/*Para Esquerda*/
-    backBoard(BoardAtual),
-    AuxColuna is (Coluna-1), getElement(BoardAtual,Linha,AuxColuna,Peca), ((Jogador == 1, (Peca == p; Peca == rp));(Jogador == 2, (Peca == b; Peca == rb))),
-    AuxColuna2 is (Coluna-2), getElement(BoardAtual,Linha,AuxColuna2,Peca2), Peca2 == none, display_board(BoardAtual), write('Tera de comer a peca do advesario'),nl,
-    repeat,
-      ask_for_new_piece(NovaLinha,NovaColuna),
-      verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
-      verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,1),
-    !,
-    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple(Jogador,NovaLinha,NovaColuna)
-  );true.
-
-verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Warnings):-
-  (
-    (
-      (Jogador == 1, Aux1 is (Linha - NovaLinha));
-      (Jogador == 2, Aux1 is (NovaLinha - Linha))
-    ), AuxColuna is (Coluna - NovaColuna), AuxColuna2 is abs(AuxColuna),
-    ((Aux1 == 0; Aux1 == 2; Aux1 == -2), AuxColuna2 \= 1, eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard))
-  );
-  ((Warnings == 1, nl,write('!!AVISO!! Tera de comer'),nl,nl,!,false);(!,false)).
-
 /***************** Player vs Player *******************/
-% Predicado importante na verificação do jogada no modo jogador humano vs jogador humano. Recebe um jogador e uma board atual
+% Predicado importante na verificação da jogada no modo jogador humano vs jogador humano. Recebe um jogador e uma board atual
 % Devolve a linha e coluna da peça escolhida, a nova linha e nova coluna escolhida e uma nova board caso haja movimentos intermédios realizados (numa jogada o jogador pode comer 2 ou mais peças)
 % Começa por verificar qual o jogador a jogar e é identificado na consola, pergunta qual o tipo de movimento que quer realizar (Linear ou Simples) -> ask_for_type_of_move
 % Pergunta ao jogador pela linha e coluna da peça que deseja mover -> ask_for_initial_piece
@@ -210,7 +85,7 @@ ask_for_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
     (FlagKing == 0, verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard,1));
     (FlagKing == 1, verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,1))
   ),
-  flagEated(FlagEated), ((FlagEated == 0, loop_to_check_eaten(NovaBoard,Jogador,1,1,0),flagCheckEated(Reply),((Reply == 1,nl,write('!!AVISO!! E obrigado a comer'),nl,nl,!,false);true));true).
+  flagEated(FlagEated), ((FlagEated == 0, loop_to_check_eaten(NovaBoard,Jogador,1,1,0),flagCheckEated(Reply),write('flag:'),write(Reply),nl,retract(flagCheckEated(_)),((Reply == 1,nl,write('!!AVISO!! E obrigado a comer'),nl,nl,!,false);true));true).
 
 /***************** Player vs PC *******************/
 % Predicado importante, semelhante ao ask_for_play do jogador humano vs jogador humano.
@@ -254,6 +129,7 @@ ask_for_play_pc_vs_pc(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaB
     (FlagKing == 0, verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard,0));
     (FlagKing == 1, verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,0))
   ),
+  %format('Linha=~d,Coluna=~d,NovaLinha=~d,NovaColuna=~d',[Linha,Coluna,NovaLinha,NovaColuna]),nl,
   flagEated(FlagEated), ((FlagEated == 0, loop_to_check_eaten(NovaBoard,Jogador,1,1,0),flagCheckEated(Reply),((Reply == 1, !,false);true));true).
 
 % Devolve a linha e coluna de uma posicao random no modo jogador computador
@@ -264,6 +140,7 @@ ask_for_initial_piece_pc(Linha,Coluna):-
   !,
   repeat,
     random(1,9,Linha),
+    %format('ask_for_initial_piece_pc - Linha=~d,Coluna=~d',[Linha,Coluna]),nl,
     verify_line(Linha),
   !.
 
@@ -275,6 +152,7 @@ ask_for_new_piece_pc(NovaLinha,NovaColuna):-
   !,
   repeat,
     random(1,9,NovaLinha),
+    %format('ask_for_new_piece_pc - NovaLinha=~d,NovaColuna=~d',[NovaLinha,NovaColuna]),nl,
     verify_line(NovaLinha),
   !.
 
@@ -318,6 +196,33 @@ move(Jogador,BoardAtual,Linha,Coluna,NovaLinha,NovaColuna,BoardNova2):-
   updateBoard(PecaAntiga,NovaLinha,NovaColuna,BoardAtual,BoardNova),
   updateBoard(PecaNova,Linha,Coluna,BoardNova,BoardNova2).
 
+
+% Predicado importante que é chamado no final do joga depois do movimento
+% Este predicado trata de verificar se o jogador acabou de comer uma peca, caso tenha irá verificar se pode comer mais dependendo se é dama ou rei
+% Chamará os devidos predicados para verificar todas as regras dos movimentos
+% Recebe um jogador, uma board, as posicoes finais do movimento anterior
+% Devolve uma nova board atualizada
+check_can_eat_more(Jogador,NovaBoard2,Linha,Coluna,Tipo,NovaBoard3):-
+  flagEated(FlagEated),
+  (
+    (FlagEated == 1, asserta(backBoard(NovaBoard2)),
+      (
+        (getElement(NovaBoard2,Linha,Coluna,Peca), (Peca == p; Peca == b),
+          (
+            ((Tipo == 1; (Tipo == 2, Jogador == 1)), check_if_can_eat_more_simple(Jogador,Linha,Coluna));
+            (check_if_can_eat_more_simple_pc(Jogador,Linha,Coluna))
+          )
+        );
+        (getElement(NovaBoard2,Linha,Coluna,Peca), (Peca == rp; Peca == rb),write('vou ver rei'),nl,nl,
+          (
+            ((Tipo == 1; (Tipo == 2, Jogador == 1)), write('vou ver rei JOGADOR HUMANO'),nl,nl, check_if_can_eat_more_king(Jogador,Linha,Coluna));
+            (write('vou ver rei JOGADOR COMPUTADOR'),nl,nl,check_if_can_eat_more_king_pc(Jogador,Linha,Coluna))
+          )
+        )
+      ),
+      backBoard(NovaBoard3),retract(backBoard(_)),retract(flagEated(_)));
+    (NovaBoard3=NovaBoard2)
+  ).
 
 % Pergunta ao utilizador pela posição da peça que deseja mover
 ask_for_initial_piece(Linha,Coluna):-
@@ -498,7 +403,7 @@ verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBo
 
 % Predicado chamado dentro do verify_king_movement, que apenas verifica se o jogador irá comer alguma peça pelo caminho.
 % Verifica se entre as posicoes escolhidas não tem nenhuma peça sua nem mais que uma peça do adversário, pois so pode comer uma de cada vez.
-% Verifica se o jogador pode comer na vertical e horizontal, nunca na horizontal.
+% Verifica se o jogador pode comer na vertical e horizontal, nunca na diagonal.
 % Verifica se econtra uma peça do jogador adversário entre as posicoes escolhidas, e caso encontre, a peça a seguir ao do adversário terá de ser vazia.
 % Recebe um jogador, as posições das peças, a board atual, uma flag Delta(diferença de peças movidas), uma flag TypeMove(1 movimento horizontal, 2 movimento vertical, 3 movimento diagonal)
 % Recebe tambem um contador que é inicializado a 0 que conta o numero de peças do adversario encontradas nesse movimento, se duas ou mais falha.
@@ -592,7 +497,7 @@ check_hor_ver_king_neighbours(Board,Jogador,X,Y):-
     (loop_aux_king(Board,Jogador,X,Y,0,4), flagKingEating(AuxX2), AuxX is AuxX2 - 1, retract(flagKingEating(_)), getElement(Board,Y,AuxX,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true)
   ).
 
-% Predicado auxiliar de check_hor_ver_king_neighbours que irá varrer a posicao X e Y na vertical ou horizontal a procura de uma peça do adversário, retornando a posicao coluna e linha desta peça.
+% Predicado auxiliar de check_hor_ver_king_neighbours que irá varrer a posicao X e Y na vertical ou horizontal a procura de uma peça do adversário, retornando a posicao coluna ou linha desta peça no predicado flagKingEating dependendo do tipo.
 loop_aux_king(_,_,_,_,0,_):-false.
 loop_aux_king(_,_,_,_,1,_):-true.
 loop_aux_king(Board,Jogador,X,Y,_,Tipo):-
@@ -604,3 +509,243 @@ loop_aux_king(Board,Jogador,X,Y,_,Tipo):-
       (Tipo == 4, (X > 0, AuxY is Y, AuxX is X - 1,asserta(flagKingEating(AuxX))))
     ), getElement(Board,AuxY,AuxX,Peca), (((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))),loop_aux_king(Board,Jogador,AuxX,AuxY,1,Tipo);loop_aux_king(Board,Jogador,AuxX,AuxY,0,Tipo))
   ).
+
+check_if_can_eat_more_king(Jogador,Linha,Coluna):-
+  (/*Para cima*/
+    backBoard(BoardAtual), !,loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,1),
+    flagKingEating(AuxY2), AuxLinha is AuxY2 - 1, retract(flagKingEating(_)), getElement(BoardAtual,AuxLinha,Coluna,Peca), Peca == none, display_board(BoardAtual), write('CIMA - Tera de comer a peca do advesario'),nl,
+    repeat,
+      ask_for_new_piece(NovaLinha,NovaColuna),
+      verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
+      verify_king_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,1),
+    !,
+    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king(Jogador,NovaLinha,NovaColuna)
+  );
+  (/*Para Baixo*/
+    backBoard(BoardAtual), !,loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,3),
+    flagKingEating(AuxY2), AuxLinha is AuxY2 + 1, retract(flagKingEating(_)), getElement(BoardAtual,AuxLinha,Coluna,Peca), Peca == none, display_board(BoardAtual), write('BAIXO - Tera de comer a peca do advesario'),nl,
+    repeat,
+      ask_for_new_piece(NovaLinha,NovaColuna),
+      verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
+      verify_king_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,1),
+    !,
+    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king(Jogador,NovaLinha,NovaColuna)
+  );
+  (/*Para Direita*/
+    backBoard(BoardAtual), !,loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,2),
+    flagKingEating(AuxX2), AuxColuna is AuxX2 + 1, retract(flagKingEating(_)), getElement(BoardAtual,Linha,AuxColuna,Peca), format('Linha=~d, AuxColuna=~d',[Linha,AuxColuna]),nl,Peca == none, display_board(BoardAtual), write('DIREITA - Tera de comer a peca do advesario'),nl,
+    repeat,
+      ask_for_new_piece(NovaLinha,NovaColuna),
+      verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
+      verify_king_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,1),
+    !,
+    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king(Jogador,NovaLinha,NovaColuna)
+  );
+  (/*Para Esquerda*/
+    backBoard(BoardAtual), !,loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,4),
+    flagKingEating(AuxX2), AuxColuna is AuxX2 - 1, retract(flagKingEating(_)), getElement(BoardAtual,Linha,AuxColuna,Peca), Peca == none, display_board(BoardAtual), write('ESQUERDA - Tera de comer a peca do advesario'),nl,
+    repeat,
+      ask_for_new_piece(NovaLinha,NovaColuna),
+      verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
+      verify_king_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,1),
+    !,
+    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king(Jogador,NovaLinha,NovaColuna)
+  );true.
+
+check_if_can_eat_more_king_pc(Jogador,Linha,Coluna):-
+  format('check_if_can_eat_more_king_pc Jogador=~d,Linha=~d,Coluna=~d',[Jogador,Linha,Coluna]),nl,
+  (/*Para cima*/
+    backBoard(BoardAtual), write('ANTES DO loop_aux_king'),nl, loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,1), write('DEPOIS DO loop_aux_king'),nl,
+    flagKingEating(AuxY2), AuxLinha is AuxY2 - 1, retract(flagKingEating(_)), getElement(BoardAtual,AuxLinha,Coluna,Peca), Peca == none,
+    repeat,
+      ask_for_new_piece_pc(NovaLinha,NovaColuna),
+      verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
+      format('PARA CIMA - Jogador=~d,Linha=~d,Coluna=~d,NovaLinha=~d,NovaColuna=~d',[Jogador,Linha,Coluna,NovaLinha,NovaColuna]),nl,
+      verify_king_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
+    !,
+    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
+    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king_pc(Jogador,NovaLinha,NovaColuna)
+  );
+  (/*Para Baixo*/
+    backBoard(BoardAtual), write('ANTES DO loop_aux_king'),nl, loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,3), write('DEPOIS DO loop_aux_king'),nl,
+    flagKingEating(AuxY2), AuxLinha is AuxY2 + 1, retract(flagKingEating(_)), getElement(BoardAtual,AuxLinha,Coluna,Peca), Peca == none,
+    repeat,
+      ask_for_new_piece_pc(NovaLinha,NovaColuna),
+      verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
+      format('PARA BAIXO - Jogador=~d,Linha=~d,Coluna=~d,NovaLinha=~d,NovaColuna=~d',[Jogador,Linha,Coluna,NovaLinha,NovaColuna]),nl,
+      verify_king_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
+    !,
+    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
+    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king_pc(Jogador,NovaLinha,NovaColuna)
+  );
+  (/*Para Direita*/
+    backBoard(BoardAtual), write('ANTES DO loop_aux_king'),nl, loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,2), write('DEPOIS DO loop_aux_king'),nl,
+    flagKingEating(AuxX2), AuxColuna is AuxX2 + 1, retract(flagKingEating(_)), getElement(BoardAtual,Linha,AuxColuna,Peca), Peca == none,
+    repeat,
+      ask_for_new_piece_pc(NovaLinha,NovaColuna),
+      verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
+      format('PARA DIREITA - Jogador=~d,Linha=~d,Coluna=~d,NovaLinha=~d,NovaColuna=~d',[Jogador,Linha,Coluna,NovaLinha,NovaColuna]),nl,
+      verify_king_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
+    !,
+    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
+    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king_pc(Jogador,NovaLinha,NovaColuna)
+  );
+  (/*Para Esquerda*/
+    backBoard(BoardAtual), write('ANTES DO loop_aux_king'),nl, loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,4), write('DEPOIS DO loop_aux_king'),nl,
+    flagKingEating(AuxX2), AuxColuna is AuxX2 - 1, retract(flagKingEating(_)), getElement(BoardAtual,Linha,AuxColuna,Peca), Peca == none,
+    repeat,
+      ask_for_new_piece_pc(NovaLinha,NovaColuna),
+      verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
+      format('PARA ESQUERDA - Jogador=~d,Linha=~d,Coluna=~d,NovaLinha=~d,NovaColuna=~d',[Jogador,Linha,Coluna,NovaLinha,NovaColuna]),nl,
+      verify_king_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
+    !,
+    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
+    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king_pc(Jogador,NovaLinha,NovaColuna)
+  );true.
+
+verify_king_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Warnings):-
+  (
+  AuxLinha is (Linha - NovaLinha),
+  AuxLinhaABS is abs(AuxLinha),
+  AuxColuna is (Coluna - NovaColuna),
+  AuxColunaABS is abs(AuxColuna),
+    (
+      /* Horizontal - TypeMove = 1 */
+      ((AuxLinhaABS > 0, AuxColunaABS == 0), Delta is AuxLinhaABS, check_king_eating_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,Delta,1,0), king_eat(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Delta,1));
+      /* Vertical - TypeMove = 2 */
+      ((AuxLinhaABS == 0, AuxColunaABS > 0), Delta is AuxColunaABS, check_king_eating_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,Delta,2,0), king_eat(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Delta,2))
+    )
+  );
+  ((Warnings == 1, nl,write('!!AVISO!! Tera de comer a peca do adversario'),nl,nl,!,false); !,false).
+
+
+check_king_eating_for_eat_more(_,_,_,_,_,_,0,_,1):-true.
+check_king_eating_for_eat_more(_,_,_,_,_,_,0,_,0):-!,false.
+check_king_eating_for_eat_more(_,_,_,_,_,_,_,_,2):-!,false.
+check_king_eating_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,Delta,TypeMove,Conta):-
+  (
+    (TypeMove == 1, X is Coluna, ((NovaLinha > Linha, Y is Linha + 1); (NovaLinha < Linha, Y is Linha - 1)), getElement(BoardAtual,Y,X,Peca), AuxDelta is Delta -1,
+      (
+        (Peca == none, !,check_king_eating_for_eat_more(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDelta,1,Conta));
+        (Jogador == 1, (((Peca == b; Peca == rb), !,false);(Peca == p; Peca == rp), AuxConta is Conta + 1, !,check_king_eating_for_eat_more(1,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDelta,1,AuxConta)));
+        (Jogador == 2, (((Peca == p; Peca == rp), !,false);(Peca == b; Peca == rb), AuxConta is Conta + 1, !,check_king_eating_for_eat_more(2,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDelta,1,AuxConta)))
+      )
+    );
+    (TypeMove == 2, Y is Linha, ((NovaColuna > Coluna, X is Coluna + 1); (NovaColuna < Coluna,X is Coluna - 1)), getElement(BoardAtual,Y,X,Peca), AuxDelta is Delta -1,
+      (
+        (Peca == none, !,check_king_eating_for_eat_more(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDelta,2,Conta));
+        (Jogador == 1, (((Peca == b; Peca == rb), !,false);(Peca == p; Peca == rp), AuxConta is Conta + 1, !,check_king_eating_for_eat_more(1,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDelta,2,AuxConta)));
+        (Jogador == 2, (((Peca == p; Peca == rp), !,false);(Peca == b; Peca == rb), AuxConta is Conta + 1, !,check_king_eating_for_eat_more(2,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDelta,2,AuxConta)))
+      )
+    )
+  ).
+
+% Predicado importante do joga. No final do predicado joga, caso o jogador tenha comido, vai verificar se pode comer mais peças.
+% Apos o jogador ter escolhido a nova posicao, este predicado vai verificar nas suas adjacências (Vertical e horizontal) se a peça é do adversario e caso seja do adversario verifica se a peça a seguir a essa é vazia, podendo assim comer essa peça do adversario
+check_if_can_eat_more_simple_pc(Jogador,Linha,Coluna):-
+  (/*Para cima*/
+    backBoard(BoardAtual),
+    AuxLinha is (Linha-1), getElement(BoardAtual,AuxLinha,Coluna,Peca), ((Jogador == 1, (Peca == p; Peca == rp));(Jogador == 2, (Peca == b; Peca == rb))),
+    AuxLinha2 is (Linha-2), getElement(BoardAtual,AuxLinha2,Coluna,Peca2), Peca2 == none,
+    repeat,
+      ask_for_new_piece_pc(NovaLinha,NovaColuna),
+      verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
+      verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
+    !,
+    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
+    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple_pc(Jogador,NovaLinha,NovaColuna)
+  );
+  (/*Para Baixo*/
+    backBoard(BoardAtual),
+    AuxLinha is (Linha+1), getElement(BoardAtual,AuxLinha,Coluna,Peca), ((Jogador == 1, (Peca == p; Peca == rp));(Jogador == 2, (Peca == b; Peca == rb))),
+    AuxLinha2 is (Linha+2), getElement(BoardAtual,AuxLinha2,Coluna,Peca2), Peca2 == none,
+    repeat,
+      ask_for_new_piece_pc(NovaLinha,NovaColuna),
+      verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
+      verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
+    !,
+    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
+    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple_pc(Jogador,NovaLinha,NovaColuna)
+  );
+  (/*Para Direita*/
+    backBoard(BoardAtual),
+    AuxColuna is (Coluna+1), getElement(BoardAtual,Linha,AuxColuna,Peca), ((Jogador == 1, (Peca == p; Peca == rp));(Jogador == 2, (Peca == b; Peca == rb))),
+    AuxColuna2 is (Coluna+2), getElement(BoardAtual,Linha,AuxColuna2,Peca2), Peca2 == none,
+    repeat,
+      ask_for_new_piece_pc(NovaLinha,NovaColuna),
+      verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
+      verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
+    !,
+    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
+    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple_pc(Jogador,NovaLinha,NovaColuna)
+  );
+  (/*Para Esquerda*/
+    backBoard(BoardAtual),
+    AuxColuna is (Coluna-1), getElement(BoardAtual,Linha,AuxColuna,Peca), ((Jogador == 1, (Peca == p; Peca == rp));(Jogador == 2, (Peca == b; Peca == rb))),
+    AuxColuna2 is (Coluna-2), getElement(BoardAtual,Linha,AuxColuna2,Peca2), Peca2 == none,
+    repeat,
+      ask_for_new_piece_pc(NovaLinha,NovaColuna),
+      verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
+      verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
+    !,
+    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
+    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple_pc(Jogador,NovaLinha,NovaColuna)
+  );true.
+
+% Predicado importante do joga. No final do predicado joga, caso o jogador tenha comido, vai verificar se pode comer mais peças.
+% Apos o jogador ter escolhido a nova posicao, este predicado vai verificar nas suas adjacências (Vertical e horizontal) se a peça é do adversario e caso seja do adversario verifica se a peça a seguir a essa é vazia, podendo assim comer essa peça do adversario
+check_if_can_eat_more_simple(Jogador,Linha,Coluna):-
+  (/*Para cima*/
+    backBoard(BoardAtual),
+    AuxLinha is (Linha-1), getElement(BoardAtual,AuxLinha,Coluna,Peca), ((Jogador == 1, (Peca == p; Peca == rp));(Jogador == 2, (Peca == b; Peca == rb))),
+    AuxLinha2 is (Linha-2), getElement(BoardAtual,AuxLinha2,Coluna,Peca2), Peca2 == none, display_board(BoardAtual), write('Tera de comer a peca do advesario'),nl,
+    repeat,
+      ask_for_new_piece(NovaLinha,NovaColuna),
+      verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
+      verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,1),
+    !,
+    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple(Jogador,NovaLinha,NovaColuna)
+  );
+  (/*Para Baixo*/
+    backBoard(BoardAtual),
+    AuxLinha is (Linha+1), getElement(BoardAtual,AuxLinha,Coluna,Peca), ((Jogador == 1, (Peca == p; Peca == rp));(Jogador == 2, (Peca == b; Peca == rb))),
+    AuxLinha2 is (Linha+2), getElement(BoardAtual,AuxLinha2,Coluna,Peca2), Peca2 == none, display_board(BoardAtual), write('Tera de comer a peca do advesario'),nl,
+    repeat,
+      ask_for_new_piece(NovaLinha,NovaColuna),
+      verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
+      verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,1),
+    !,
+    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple(Jogador,NovaLinha,NovaColuna)
+  );
+  (/*Para Direita*/
+    backBoard(BoardAtual),
+    AuxColuna is (Coluna+1), getElement(BoardAtual,Linha,AuxColuna,Peca), ((Jogador == 1, (Peca == p; Peca == rp));(Jogador == 2, (Peca == b; Peca == rb))),
+    AuxColuna2 is (Coluna+2), getElement(BoardAtual,Linha,AuxColuna2,Peca2), Peca2 == none, display_board(BoardAtual), write('Tera de comer a peca do advesario'),nl,
+    repeat,
+      ask_for_new_piece(NovaLinha,NovaColuna),
+      verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
+      verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,1),
+    !,
+    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple(Jogador,NovaLinha,NovaColuna)
+  );
+  (/*Para Esquerda*/
+    backBoard(BoardAtual),
+    AuxColuna is (Coluna-1), getElement(BoardAtual,Linha,AuxColuna,Peca), ((Jogador == 1, (Peca == p; Peca == rp));(Jogador == 2, (Peca == b; Peca == rb))),
+    AuxColuna2 is (Coluna-2), getElement(BoardAtual,Linha,AuxColuna2,Peca2), Peca2 == none, display_board(BoardAtual), write('Tera de comer a peca do advesario'),nl,
+    repeat,
+      ask_for_new_piece(NovaLinha,NovaColuna),
+      verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
+      verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,1),
+    !,
+    move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple(Jogador,NovaLinha,NovaColuna)
+  );true.
+
+verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Warnings):-
+  (
+    (
+      (Jogador == 1, Aux1 is (Linha - NovaLinha));
+      (Jogador == 2, Aux1 is (NovaLinha - Linha))
+    ), AuxColuna is (Coluna - NovaColuna), AuxColuna2 is abs(AuxColuna),
+    ((Aux1 == 0; Aux1 == 2; Aux1 == -2), AuxColuna2 \= 1, eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard))
+  );
+  ((Warnings == 1, nl,write('!!AVISO!! Tera de comer a peca do adversario'),nl,nl,!,false);(!,false)).
