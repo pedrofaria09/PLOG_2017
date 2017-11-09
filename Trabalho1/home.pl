@@ -117,41 +117,14 @@ teste([[none, none, none, none, none, b, none, rb],
       [none, none, none, none, b, b, p, b],
       [none, none, none, none, none, none, none, none]]).
 
-end1([[p, none, none, p, p, p, none, none],
+end1([[none, none, none, none, none, none, none, none],
+      [none, p, none, none, p, none, p, p],
+      [none, none, none, none, none, none, none, none],
       [p, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, p, p],
-      [rp, none, none, none, none, none, none, p],
-      [none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, none, none],
-      [b, none, none, none, none, none, none, b]]).
-
-end2([[none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, rb, none, none],
-      [none, none, none, none, none, b, b, none],
+      [none, none, none, p, none, none, none, none],
+      [none, none, none, none, b, none, none, none],
       [none, none, none, b, none, none, none, none],
-      [none, none, none, none, none, none, none, none],
-      [none, none, none, none, b, none, b, none],
-      [none, none, none, rp, none, none, b, none]]).
-
-end3([[none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, none, none],
-      [none, rb, none, p, none, p, p, none],
-      [none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, none, none]]).
-
-end4([[none, none, none, none, none, none, none, none],
-      [none, p, none, none, none, none, none, none],
-      [b, none, none, none, none, p, none, none],
-      [none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, p, b],
-      [none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, none, none]]).
+      [rb, none, none, none, none, none, none, none]]).
 
 end([[rb, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
