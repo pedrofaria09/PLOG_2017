@@ -515,7 +515,7 @@ loop_aux_king(Board,Jogador,X,Y,_,Tipo):-
 check_if_can_eat_more_king(Jogador,Linha,Coluna):-
   (/*Para cima*/
     backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,1),
-    flagKingEating(AuxY2), AuxLinha is AuxY2 - 1, retract(flagKingEating(_)), getElement(BoardAtual,AuxLinha,Coluna,Peca), Peca == none, display_board(BoardAtual), write('CIMA - Tera de comer a peca do advesario'),nl,
+    flagKingEating(AuxY2), AuxLinha is AuxY2 - 1, retract(flagKingEating(_)), getElement(BoardAtual,AuxLinha,Coluna,Peca), Peca == none, display_board(BoardAtual), write('Tera de comer a peca do advesario'),nl,
     repeat,
       ask_for_new_piece(NovaLinha,NovaColuna),
       verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
@@ -525,7 +525,7 @@ check_if_can_eat_more_king(Jogador,Linha,Coluna):-
   );
   (/*Para Baixo*/
     backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,3),
-    flagKingEating(AuxY2), AuxLinha is AuxY2 + 1, retract(flagKingEating(_)), getElement(BoardAtual,AuxLinha,Coluna,Peca), Peca == none, display_board(BoardAtual), write('BAIXO - Tera de comer a peca do advesario'),nl,
+    flagKingEating(AuxY2), AuxLinha is AuxY2 + 1, retract(flagKingEating(_)), getElement(BoardAtual,AuxLinha,Coluna,Peca), Peca == none, display_board(BoardAtual), write('Tera de comer a peca do advesario'),nl,
     repeat,
       ask_for_new_piece(NovaLinha,NovaColuna),
       verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
@@ -535,7 +535,7 @@ check_if_can_eat_more_king(Jogador,Linha,Coluna):-
   );
   (/*Para Direita*/
     backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,2),
-    flagKingEating(AuxX2), AuxColuna is AuxX2 + 1, retract(flagKingEating(_)), getElement(BoardAtual,Linha,AuxColuna,Peca), Peca == none, display_board(BoardAtual), write('DIREITA - Tera de comer a peca do advesario'),nl,
+    flagKingEating(AuxX2), AuxColuna is AuxX2 + 1, retract(flagKingEating(_)), getElement(BoardAtual,Linha,AuxColuna,Peca), Peca == none, display_board(BoardAtual), write('Tera de comer a peca do advesario'),nl,
     repeat,
       ask_for_new_piece(NovaLinha,NovaColuna),
       verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
@@ -545,7 +545,7 @@ check_if_can_eat_more_king(Jogador,Linha,Coluna):-
   );
   (/*Para Esquerda*/
     backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,4),
-    flagKingEating(AuxX2), AuxColuna is AuxX2 - 1, retract(flagKingEating(_)), getElement(BoardAtual,Linha,AuxColuna,Peca), Peca == none, display_board(BoardAtual), write('ESQUERDA - Tera de comer a peca do advesario'),nl,
+    flagKingEating(AuxX2), AuxColuna is AuxX2 - 1, retract(flagKingEating(_)), getElement(BoardAtual,Linha,AuxColuna,Peca), Peca == none, display_board(BoardAtual), write('Tera de comer a peca do advesario'),nl,
     repeat,
       ask_for_new_piece(NovaLinha,NovaColuna),
       verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
