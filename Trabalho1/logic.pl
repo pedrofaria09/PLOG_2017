@@ -85,7 +85,7 @@ ask_for_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
     (FlagKing == 0, verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard,1));
     (FlagKing == 1, verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,1))
   ),
-  flagEated(FlagEated), ((FlagEated == 0, loop_to_check_eaten(NovaBoard,Jogador,1,1,0),flagCheckEated(Reply),format('Reply:~d',[Reply]),nl,retract(flagCheckEated(_)),((Reply == 1,nl,write('!!AVISO!! E obrigado a comer'),nl,nl,!,false);true));true).
+  flagEated(FlagEated), ((FlagEated == 0, loop_to_check_eaten(NovaBoard,Jogador,1,1,0),flagCheckEated(Reply),retract(flagCheckEated(_)),((Reply == 1,nl,write('!!AVISO!! E obrigado a comer'),nl,nl,!,false);true));true).
 
 /***************** Player vs PC *******************/
 % Predicado importante, semelhante ao ask_for_play do jogador humano vs jogador humano.
@@ -130,7 +130,7 @@ ask_for_play_pc_vs_pc(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaB
     (FlagKing == 1, verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,0))
   ),
   %format('Linha=~d,Coluna=~d,NovaLinha=~d,NovaColuna=~d',[Linha,Coluna,NovaLinha,NovaColuna]),nl,
-  flagEated(FlagEated), ((FlagEated == 0, loop_to_check_eaten(NovaBoard,Jogador,1,1,0),flagCheckEated(Reply),retract(flagCheckEated(_)),((Reply == 1, !,false);true));true).
+  flagEated(FlagEated), ((FlagEated == 0, loop_to_check_eaten(NovaBoard,Jogador,1,1,0),flagCheckEated(Reply),retract(flagCheckEated(_)),((Reply == 1, !,false); true));true).
 
 % Devolve a linha e coluna de uma posicao random no modo jogador computador
 ask_for_initial_piece_pc(Linha,Coluna):-
@@ -213,10 +213,10 @@ check_can_eat_more(Jogador,NovaBoard2,Linha,Coluna,Tipo,NovaBoard3):-
             (check_if_can_eat_more_simple_pc(Jogador,Linha,Coluna))
           )
         );
-        (getElement(NovaBoard2,Linha,Coluna,Peca), (Peca == rp; Peca == rb),write('vou ver rei'),nl,nl,
+        (getElement(NovaBoard2,Linha,Coluna,Peca), (Peca == rp; Peca == rb),
           (
-            ((Tipo == 1; (Tipo == 2, Jogador == 1)), write('vou ver rei JOGADOR HUMANO'),nl,nl, check_if_can_eat_more_king(Jogador,Linha,Coluna));
-            (write('vou ver rei JOGADOR COMPUTADOR'),nl,nl,check_if_can_eat_more_king_pc(Jogador,Linha,Coluna))
+            ((Tipo == 1; (Tipo == 2, Jogador == 1)), check_if_can_eat_more_king(Jogador,Linha,Coluna));
+            (check_if_can_eat_more_king_pc(Jogador,Linha,Coluna))
           )
         )
       ),
@@ -476,7 +476,7 @@ loop_to_check_eaten(Board,Jogador,X,Y,Reply):-
 
       (
         (Peca == p; Peca == b),check_hor_ver_normal_neighbours(Board,Jogador,X,Y);
-        (Peca == rp; Peca == rb),check_hor_ver_king_neighbours(Board,Jogador,X,Y)
+        (Peca == rp; Peca == rb), write('X'),check_hor_ver_king_neighbours(Board,Jogador,X,Y)
       ),flagCheckEated(Reply2),(X < 8, AuxX is X + 1, AuxY is Y;Y < 8, AuxY is Y + 1, AuxX is 1), !,loop_to_check_eaten(Board,Jogador,AuxX,AuxY,Reply2));
     ((X < 8, AuxX is X + 1, AuxY is Y;Y < 8, AuxY is Y + 1, AuxX is 1),!,loop_to_check_eaten(Board,Jogador,AuxX,AuxY,Reply))
   ).
@@ -493,10 +493,10 @@ check_hor_ver_normal_neighbours(Board,Jogador,X,Y):-
 % Predicado auxiliar de loop_to_check_eaten, que verificará se nas posicções verticais ou horizontais de X e Y recorrendo o predicado loop_aux_king, existe uma peça do adversário que seja possível come-la e alterará a flag presente do predicado flagCheckEated.
 check_hor_ver_king_neighbours(Board,Jogador,X,Y):-
   (
-    (loop_aux_king(Board,Jogador,X,Y,0,1), flagKingEating(AuxY2), AuxY is AuxY2 - 1, retract(flagKingEating(_)), getElement(Board,AuxY,X,Peca2), ((Peca2 \= none, !,false);(true)), retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
-    (loop_aux_king(Board,Jogador,X,Y,0,2), flagKingEating(AuxX2), AuxX is AuxX2 + 1, retract(flagKingEating(_)), getElement(Board,Y,AuxX,Peca2), ((Peca2 \= none, !,false);(true)), retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
-    (loop_aux_king(Board,Jogador,X,Y,0,3), flagKingEating(AuxY2), AuxY is AuxY2 + 1, retract(flagKingEating(_)), getElement(Board,AuxY,X,Peca2), ((Peca2 \= none, !,false);(true)), retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true);
-    (loop_aux_king(Board,Jogador,X,Y,0,4), flagKingEating(AuxX2), AuxX is AuxX2 - 1, retract(flagKingEating(_)), getElement(Board,Y,AuxX,Peca2), ((Peca2 \= none, !,false);(true)), retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)),true)
+    (loop_aux_king(Board,Jogador,X,Y,0,1), flagKingEating(AuxY2), AuxY is AuxY2 - 1, retract(flagKingEating(_)), getElement(Board,AuxY,X,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)));
+    (loop_aux_king(Board,Jogador,X,Y,0,2), flagKingEating(AuxX2), AuxX is AuxX2 + 1, retract(flagKingEating(_)), getElement(Board,Y,AuxX,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)));
+    (loop_aux_king(Board,Jogador,X,Y,0,3), flagKingEating(AuxY2), AuxY is AuxY2 + 1, retract(flagKingEating(_)), getElement(Board,AuxY,X,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)));
+    (loop_aux_king(Board,Jogador,X,Y,0,4), flagKingEating(AuxX2), AuxX is AuxX2 - 1, retract(flagKingEating(_)), getElement(Board,Y,AuxX,Peca2), Peca2 == none, retract(flagCheckEated(_)), FlagEat is 1, asserta(flagCheckEated(FlagEat)))
   ).
 
 % Predicado auxiliar de check_hor_ver_king_neighbours que irá varrer a posicao X e Y na vertical ou horizontal a procura de uma peça do adversário, retornando a posicao coluna ou linha desta peça no predicado flagKingEating dependendo do tipo.
@@ -509,7 +509,7 @@ loop_aux_king(Board,Jogador,X,Y,_,Tipo):-
       (Tipo == 2, (X < 8, AuxY is Y, AuxX is X + 1,asserta(flagKingEating(AuxX))));
       (Tipo == 3, (Y < 8, AuxY is Y + 1, AuxX is X,asserta(flagKingEating(AuxY))));
       (Tipo == 4, (X > 0, AuxY is Y, AuxX is X - 1,asserta(flagKingEating(AuxX))))
-    ), getElement(Board,AuxY,AuxX,Peca), (((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))),loop_aux_king(Board,Jogador,AuxX,AuxY,1,Tipo);loop_aux_king(Board,Jogador,AuxX,AuxY,0,Tipo))
+    ), getElement(Board,AuxY,AuxX,Peca), (((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))),loop_aux_king(Board,Jogador,AuxX,AuxY,1,Tipo),!;loop_aux_king(Board,Jogador,AuxX,AuxY,0,Tipo),!)
   ).
 
 check_if_can_eat_more_king(Jogador,Linha,Coluna):-

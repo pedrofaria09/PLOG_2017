@@ -118,13 +118,22 @@ teste([[none, none, none, none, none, b, none, rb],
       [none, none, none, none, none, none, none, none]]).
 
 end1([[none, none, none, none, none, none, none, none],
-      [none, p, none, none, p, none, p, p],
-      [none, none, none, none, none, none, none, none],
       [p, none, none, none, none, none, none, none],
-      [none, none, none, p, none, none, none, none],
-      [none, none, none, none, b, none, none, none],
+      [p, none, none, none, none, none, none, none],
+      [rb, p, none, p, none, p, p, none],
+      [p, none, none, none, none, none, none, none],
+      [p, none, none, none, b, none, none, none],
       [none, none, none, b, none, none, none, none],
-      [rb, none, none, none, none, none, none, none]]).
+      [none, none, none, none, none, none, none, none]]).
+
+end2([[none, none, none, none, none, none, none, none],
+      [none, none, none, b, none, none, none, none],
+      [none, none, none, p, none, none, none, none],
+      [none, b, p, rb, p, b, none, none],
+      [none, none, none, p, none, none, none, none],
+      [none, none, none, b, none, none, none, none],
+      [none, none, none, none, none, none, none, none],
+      [none, none, none, none, none, none, none, none]]).
 
 end([[rb, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
