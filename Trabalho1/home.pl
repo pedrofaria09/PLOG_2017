@@ -108,30 +108,50 @@ middle([[rb, rp, none, rp, p, none, rp, rp],
         [p, none, rb, none, none, none, none, none],
         [none, none, none, rp, none, none, none, none]]).
 
-teste([[none, none, none, none, none, b, none, rb],
+teste([[none, none, none, none, none, rb, none, rb],
       [p, p, p, none, b, none, none, none],
       [none, none, none, p, p, none, p, none],
       [none, b, none, b, none, p, none, none],
       [none, p, none, b, b, none, none, none],
       [none, none, none, b, b, p, b, none],
-      [none, none, none, none, b, b, p, b],
+      [none, none, none, none, b, p, p, b],
+      [none, none, none, none, none, none, none, none]]).
+
+/*Para multi king a comer*/
+teste2([[none, none, none, none, none, b, none, none],
+      [none, none, p, none, rb, none, b, none],
+      [none, rp, none, rp, none, none, none, none],
+      [none, none, none, none, none, none, none, none],
+      [none, none, none, p, none, none, none, none],
+      [none, p, none, p, rb, none, none, none],
+      [none, none, none, none, none, none, none, none],
+      [none, rb, none, none, none, none, rp, none]]).
+
+/*Para multi dama a comer*/
+teste3([[none, none, none, none, none, none, none, none],
+      [none, none, none, none, none, p, none, none],
+      [none, p, none, none, none, none, none, none],
+      [p, none, p, none, none, b, none, none],
+      [none, none, none, none, none, none, none, none],
+      [p, none, p, none, none, none, none, none],
+      [none, none, b, none, none, none, none, none],
       [none, none, none, none, none, none, none, none]]).
 
 end1([[none, none, none, none, none, none, none, none],
-      [p, none, none, none, none, none, none, none],
-      [p, none, none, none, none, none, none, none],
-      [rb, p, none, p, none, p, p, none],
-      [p, none, none, none, none, none, none, none],
-      [p, none, none, none, b, none, none, none],
-      [none, none, none, b, none, none, none, none],
-      [none, none, none, none, none, none, none, none]]).
-
-end2([[none, none, none, none, none, none, none, none],
       [none, none, none, b, none, none, none, none],
       [none, none, none, p, none, none, none, none],
       [none, b, p, rb, p, b, none, none],
       [none, none, none, p, none, none, none, none],
       [none, none, none, b, none, none, none, none],
+      [none, none, none, none, none, none, none, none],
+      [none, none, none, none, none, none, none, none]]).
+
+end2([[none, none, none, none, none, none, none, none],
+      [none, none, none, none, none, none, none, none],
+      [none, rp, none, none, none, none, none, none],
+      [none, none, p, none, none, none, none, none],
+      [none, none, p, rb, none, none, none, none],
+      [none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none]]).
 

@@ -3,12 +3,17 @@
 :-dynamic flagKingEating/1.
 :-dynamic jogada/1.
 :-dynamic backBoard/1.
+:- dynamic bestOldX/1.
+:- dynamic bestOldY/1.
+:- dynamic bestNewX/1.
+:- dynamic bestNewY/1.
+:- dynamic backBoardPC/1.
 
 % Predicado inicial que chama o ciclo de jogo
 % Tipo 1 - Player vs Player
 % Tipo 2 - Player vs PC
 % Tipo 3 - PC vs PC
-start(Tipo) :- initial(Board),
+start(Tipo) :- teste(Board),
   Jogada is 1,
   ciclo_jogada(Board, Jogada, Tipo).
 
@@ -16,8 +21,8 @@ start(Tipo) :- initial(Board),
 ciclo_jogada(Board,-1,_):-jogada(Jogada),display_game_area(Board, Jogada),write('PRETAS GANHOU!!').
 ciclo_jogada(Board,-2,_):-jogada(Jogada),display_game_area(Board, Jogada),write('BRANCAS GANHOU!!').
 ciclo_jogada(Board,Jogada,Tipo):-
-  (Tipo \= 3, display_game_area(Board, Jogada);true),
-  %display_game_area(Board, Jogada),
+  %(Tipo \= 3, display_game_area(Board, Jogada);true),
+  display_game_area(Board, Jogada),
   joga(Jogada, Board, BoardNova, Tipo),
   verify_end_game(BoardNova, Jogada, NovaJogada),
   ciclo_jogada(BoardNova, NovaJogada, Tipo).
@@ -48,15 +53,56 @@ joga(Jogada, BoardAtual, NovaBoard3, Tipo):-
       (Tipo == 2, ask_for_play_plr_vs_pc(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard),
         ((Jogador = 2, info_jogada_pc(Tipo,Jogador,Linha,Coluna,NovaLinha,NovaColuna));true)
       );
-      (Tipo == 3, ask_for_play_pc_vs_pc(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard),
-        info_jogada_pc(Tipo,Jogador,Linha,Coluna,NovaLinha,NovaColuna)
+      (Tipo == 3, ask_for_play_pc_vs_pc(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard)/*best_play_pc_positions(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual),backBoardPC(NovaBoard)*/,
+        info_jogada_pc(2,Jogador,Linha,Coluna,NovaLinha,NovaColuna)
       )
     ),
   !,
   move(Jogador,NovaBoard,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard2),
   check_can_eat_more(Jogador,NovaBoard2,NovaLinha,NovaColuna,Tipo,NovaBoard3).
 
-% best_play_pc(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual).
+%Predicado para verificar a jogada no qual o pc pode escolher uma peca perto da sua casa adversária.
+best_play_pc_positions(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual):-
+  asserta(backBoardPC(BoardAtual)), backBoardPC(BackBoard), conta_total_pecas(Jogador, BackBoard, Valor),
+  (Jogador == 1, asserta(bestNewY(9));Jogador == 2, asserta(bestNewY(1))),
+  loop_to_check_best_play(Jogador,_,_,_,_,BackBoard,_,Valor),
+  bestOldX(Coluna),bestOldY(Linha),bestNewX(NovaColuna),bestNewY(NovaLinha),retract(bestOldX(_)),retract(bestOldY(_)),retract(bestNewX(_)),retract(bestNewY(_)).
+
+%Predicado auxiliar do best_play_pc para calcular qual a melhor jogada a devolver
+loop_to_check_best_play(_,_,_,_,_,_,_,0):-true.
+loop_to_check_best_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,BoardNova,_):-
+  FlagEat is 0, asserta(flagEated(FlagEat)),
+  ask_for_type_of_move_pc(TipoDeMov),
+  repeat,
+    ask_for_initial_piece_pc(Linha,Coluna),
+    verify_initial_piece_player_pc(Jogador,Linha,Coluna,BoardAtual),
+  !,
+  verify_if_king_and_not_linear_pc(BoardAtual,Linha,Coluna,FlagKing,TipoDeMov),
+  repeat,
+    ask_for_new_piece_pc(NovaLinha,NovaColuna),
+    verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
+  !,
+  (
+    (FlagKing == 0, verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard,0));
+    (FlagKing == 1, verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,0))
+  ),
+  %format('Linha=~d,Coluna=~d,NovaLinha=~d,NovaColuna=~d',[Linha,Coluna,NovaLinha,NovaColuna]),nl,
+  flagEated(FlagEated),
+    (
+      (FlagEated == 0, loop_to_check_eaten(NovaBoard,Jogador,1,1,0),flagCheckEated(Reply),retract(flagCheckEated(_)),
+        (
+          (Reply == 1, !,false);
+          updateBoard(none,Linha,Coluna,NovaBoard,BoardNova),
+          ((Jogador == 1, (bestNewY(BestNewY), NovaLinha < BestNewY, retract(bestNewY(_)), asserta(bestOldX(Coluna)),asserta(bestOldY(Linha)),asserta(bestNewX(NovaColuna)),asserta(bestNewY(NovaLinha))));
+          (Jogador == 2, (bestNewY(BestNewY), NovaLinha > BestNewY, retract(bestNewY(_)), asserta(bestOldX(Coluna)),asserta(bestOldY(Linha)),asserta(bestNewX(NovaColuna)),asserta(bestNewY(NovaLinha))))),
+          loop_to_check_best_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,BoardNova,Valor2)
+        )
+      );
+      updateBoard(none,Linha,Coluna,NovaBoard,BoardNova),
+      ((Jogador == 1, (bestNewY(BestNewY), NovaLinha < BestNewY, retract(bestNewY(_)), asserta(bestOldX(Coluna)),asserta(bestOldY(Linha)),asserta(bestNewX(NovaColuna)),asserta(bestNewY(NovaLinha))));
+      (Jogador == 2, (bestNewY(BestNewY), NovaLinha > BestNewY, retract(bestNewY(_)), asserta(bestOldX(Coluna)),asserta(bestOldY(Linha)),asserta(bestNewX(NovaColuna)),asserta(bestNewY(NovaLinha))))),
+      conta_total_pecas(Jogador, BoardNova, Valor2), loop_to_check_best_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,BoardNova,Valor2)
+    ).
 
 /***************** Player vs Player *******************/
 % Predicado importante na verificação da jogada no modo jogador humano vs jogador humano. Recebe um jogador e uma board atual
@@ -507,12 +553,12 @@ loop_aux_king(_,_,_,_,0,_):-false.
 loop_aux_king(_,_,_,_,1,_):-true.
 loop_aux_king(Board,Jogador,X,Y,_,Tipo):-
   (
-    (write('X'),
+    (
       (Tipo == 1, (Y > 0, AuxY is Y - 1, AuxX is X,asserta(flagKingEating(AuxY))));
       (Tipo == 2, (X < 8, AuxY is Y, AuxX is X + 1,asserta(flagKingEating(AuxX))));
       (Tipo == 3, (Y < 8, AuxY is Y + 1, AuxX is X,asserta(flagKingEating(AuxY))));
       (Tipo == 4, (X > 0, AuxY is Y, AuxX is X - 1,asserta(flagKingEating(AuxX))))
-    ), getElement(Board,AuxY,AuxX,Peca), (((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))),loop_aux_king(Board,Jogador,AuxX,AuxY,1,Tipo),!;loop_aux_king(Board,Jogador,AuxX,AuxY,0,Tipo),!)
+    ), getElement(Board,AuxY,AuxX,Peca), format('DENTRO,Y=~d,X=~d,Peca=~w',[AuxY,AuxX,Peca]),nl, (((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))),!,loop_aux_king(Board,Jogador,AuxX,AuxY,1,Tipo),!;!,loop_aux_king(Board,Jogador,AuxX,AuxY,0,Tipo),!)
   ).
 
 % Predicado importante do joga dentro do check_can_eat_more. No final do predicado joga, caso o jogador tenha comido, vai verificar se pode comer mais peças com uma peca king no modo de jogador humano
@@ -521,8 +567,8 @@ loop_aux_king(Board,Jogador,X,Y,_,Tipo):-
 % Se nao se verificar estas situacoes retorna true que significa que nao pode comer mais pecas.
 check_if_can_eat_more_king(Jogador,Linha,Coluna):-
   (/*Para cima*/
-    backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,1),
-    flagKingEating(AuxY2), AuxLinha is AuxY2 - 1, retract(flagKingEating(_)), getElement(BoardAtual,AuxLinha,Coluna,Peca), Peca == none, display_board(BoardAtual), write('Tera de comer a peca do advesario'),nl,
+    backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,1),write('sai'),nl,
+    flagKingEating(AuxY2), AuxLinha is AuxY2 - 1, retract(flagKingEating(_)), getElement(BoardAtual,AuxLinha,Coluna,Peca), format('Y=~d,X=~d,Peca=~w',[AuxLinha,Coluna,Peca]),nl, Peca == none, display_board(BoardAtual), write('CIMA-Tera de comer a peca do advesario'),nl,
     repeat,
       ask_for_new_piece(NovaLinha,NovaColuna),
       verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
@@ -531,8 +577,8 @@ check_if_can_eat_more_king(Jogador,Linha,Coluna):-
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king(Jogador,NovaLinha,NovaColuna)
   );
   (/*Para Baixo*/
-    backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,3),
-    flagKingEating(AuxY2), AuxLinha is AuxY2 + 1, retract(flagKingEating(_)), getElement(BoardAtual,AuxLinha,Coluna,Peca), Peca == none, display_board(BoardAtual), write('Tera de comer a peca do advesario'),nl,
+    backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,3),write('sai'),nl,
+    flagKingEating(AuxY2), AuxLinha is AuxY2 + 1, retract(flagKingEating(_)), getElement(BoardAtual,AuxLinha,Coluna,Peca), format('Y=~d,X=~d,Peca=~w',[AuxLinha,Coluna,Peca]),nl, Peca == none, display_board(BoardAtual), write('BAIXO-Tera de comer a peca do advesario'),nl,
     repeat,
       ask_for_new_piece(NovaLinha,NovaColuna),
       verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
@@ -541,8 +587,8 @@ check_if_can_eat_more_king(Jogador,Linha,Coluna):-
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king(Jogador,NovaLinha,NovaColuna)
   );
   (/*Para Direita*/
-    backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,2),
-    flagKingEating(AuxX2), AuxColuna is AuxX2 + 1, retract(flagKingEating(_)), getElement(BoardAtual,Linha,AuxColuna,Peca), Peca == none, display_board(BoardAtual), write('Tera de comer a peca do advesario'),nl,
+    backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,2),write('sai'),nl,
+    flagKingEating(AuxX2), AuxColuna is AuxX2 + 1, retract(flagKingEating(_)), getElement(BoardAtual,Linha,AuxColuna,Peca), format('Y=~d,X=~d,Peca=~w',[Linha,AuxColuna,Peca]),nl, Peca == none, display_board(BoardAtual), write('DIREITA-Tera de comer a peca do advesario'),nl,
     repeat,
       ask_for_new_piece(NovaLinha,NovaColuna),
       verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
@@ -551,8 +597,8 @@ check_if_can_eat_more_king(Jogador,Linha,Coluna):-
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king(Jogador,NovaLinha,NovaColuna)
   );
   (/*Para Esquerda*/
-    backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,4),
-    flagKingEating(AuxX2), AuxColuna is AuxX2 - 1, retract(flagKingEating(_)), getElement(BoardAtual,Linha,AuxColuna,Peca), Peca == none, display_board(BoardAtual), write('Tera de comer a peca do advesario'),nl,
+    backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,4),write('sai'),nl,
+    flagKingEating(AuxX2), AuxColuna is AuxX2 - 1, retract(flagKingEating(_)), getElement(BoardAtual,Linha,AuxColuna,Peca), format('Y=~d,X=~d,Peca=~w',[Linha,AuxColuna,Peca]),nl, Peca == none, display_board(BoardAtual), write('ESQUERDA-Tera de comer a peca do advesario'),nl,
     repeat,
       ask_for_new_piece(NovaLinha,NovaColuna),
       verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),

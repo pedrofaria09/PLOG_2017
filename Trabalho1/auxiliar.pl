@@ -69,3 +69,7 @@ verify_column(Coluna_Letra,Coluna):-
     ((Coluna_Letra == (h);Coluna_Letra == ('H')), Coluna is 8)
   );
   nl,write('!!AVISO!! Introduza a coluna correta: A-H'),nl,nl,false.
+
+conta_total_pecas(Jogador, Board, Valor):-
+  (Jogador == 1, conta_pecas(b,Board,Nr_brancas), conta_pecas(rb,Board,Nr_rei_brancas), Valor is Nr_brancas+Nr_rei_brancas);
+  (Jogador == 2, conta_pecas(p,Board,Nr_pretas), conta_pecas(rp,Board,Nr_rei_pretas), Valor is Nr_pretas+Nr_rei_pretas).
