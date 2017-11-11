@@ -38,7 +38,7 @@ verify_end_game(Board, Jogada, NovaJogada):-
 % Se o tipo for 1, Humano Vs Humano e chama o predicado ask_for_play
 % Se o tipo for 2, Humano Vs PC e chama o predicado ask_for_play_plr_vs_pc
 % Se o tipo for 3, Humano Vs PC e chama o predicado ask_for_play_pc_vs_pc
-% Apos ser verificada todas as regras da jogada dentro dos ask_for_play respetivos, é feito o movimento
+% Apos serem verificadas todas as regras da jogada dentro dos ask_for_play respetivos, é feito o movimento
 % No final verifica se o jogador pode comer mais peças no caso de ter comido uma peca durante o este movimento.
 joga(Jogada, BoardAtual, NovaBoard3, Tipo):-
   ((par(Jogada), Jogador = 2);(impar(Jogada), Jogador = 1)),
@@ -56,17 +56,19 @@ joga(Jogada, BoardAtual, NovaBoard3, Tipo):-
   move(Jogador,NovaBoard,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard2),
   check_can_eat_more(Jogador,NovaBoard2,NovaLinha,NovaColuna,Tipo,NovaBoard3).
 
+% best_play_pc(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual).
+
 /***************** Player vs Player *******************/
 % Predicado importante na verificação da jogada no modo jogador humano vs jogador humano. Recebe um jogador e uma board atual
-% Devolve a linha e coluna da peça escolhida, a nova linha e nova coluna escolhida e uma nova board caso haja movimentos intermédios realizados (numa jogada o jogador pode comer 2 ou mais peças)
-% Começa por verificar qual o jogador a jogar e é identificado na consola, pergunta qual o tipo de movimento que quer realizar (Linear ou Simples) -> ask_for_type_of_move
+% Recebe um jogador e devolve a linha e coluna da peça escolhida, a nova linha e nova coluna escolhida e uma nova board caso haja um movimento intermedio de ter comido uma peca
+% Começa por verificar qual o jogador nessa jogada e é identificado na consola, pergunta qual o tipo de movimento que quer realizar (Linear ou Simples) -> ask_for_type_of_move
 % Pergunta ao jogador pela linha e coluna da peça que deseja mover -> ask_for_initial_piece
 % Verifica se essa peça é sua -> verify_initial_piece_player
 % Verifica se a peça escolhida é rei ou não, pois o rei não pode ter um movimento Linear -> verify_if_king_and_not_linear
 % Pergunta ao jogador pela nova linha e nova coluna da peça a mover -> ask_for_new_piece
-% Verifica se a nova peça não é sua e nem é do jogador -> verifiy_new_piece_player
+% Verifica se a nova posicao não contem uma peca sua ou do adversario -> verifiy_new_piece_player
 % Dependendo da peça escolhida, dama normal ou rei, chama o predicado verify_movement e verify_king_movement, respetivamente e verifica todas as regras dessa jogada, caso alguma falhe, o jogador poderá repetir a jogada
-% No final deste predicado é verificado se o jogador comeu alguma peça, caso não tenha comido verifica se poderia ter comido alguma peça, caso possa, o jogador terá de repetir a jogada.
+% No final deste predicado é verificado se o jogador comeu alguma peça, caso não tenha comido verifica se poderia ter comido alguma peça e caso possa, o jogador terá de repetir a jogada.
 ask_for_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard):-
   ((Jogador == 2, write('Jogam as pretas'));
   Jogador == 1, write('Jogam as brancas')),nl,
@@ -186,7 +188,7 @@ verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual):-
 
 /* ================================ END PC OLD AND NEW PIECES RULES ================================ */
 
-% Predicado importante que altera a board no final da jogada.
+% Predicado importante que altera a board.
 % Depois de todas as regras de jogo terem sido verificados, este predicado irá mover as peças.
 % Recebe um jogador, uma board, as posicoes iniciais e as posicoes finais
 % Devolve uma nova board atualizada
@@ -251,7 +253,7 @@ ask_for_new_piece(NovaLinha,NovaColuna):-
   !.
 
 % Pergunta ao utilizador pelo tipo de movimento
-% Retorna 1 se o movimento foi Normal, 2 se o movimento for Linear
+% Retorna 1 se o movimento for Normal, 2 se o movimento for Linear
 % Repete até escolher um tipo de movimento correto
 ask_for_type_of_move(TipoDeMov):-
   repeat,
@@ -299,11 +301,10 @@ verify_piece_to_king(Jogador,BoardAtual,Linha,Coluna,NovaLinha,PecaAntiga):-
     )
   ).
 
-% Predicado importante na jogada. Depois do jogador ter escolhido as posições das peças este predicado tratará de verificar se as posições escolhidas são válidas para o tipo de mvimento escolhido.
+% Predicado importante na jogada. Depois do jogador ter escolhido as posições das peças este predicado tratará de verificar se as posições escolhidas são válidas para o tipo de movimento escolhido.
 % Verifica se o jogador escolher o movimento simples, poderá apenas andar uma posição para a frente na vertical ou diagonal.
 % Verifica se o jogador escolher o movimento simples, vai comer uma peça na vertical ou horizontal.
-% Verifica se o jogador escolher o movimento simples, pode comer mais que uma peça na mesma jogada.
-% Verifica se o jogador escolher o movimento linear, não pode comer e apenas pode deslocar uma posicao na diagonal ou horizontal.
+% Verifica se o jogador escolher o movimento linear, não pode comer e apenas pode deslocar as suas pecas uma posicao na diagonal ou horizontal.
 % Se warnings == 0, não será mostrado na consola os erros da jogada (Evita sobrecarga no modo jogador computador), se warnings == 1, mostra os erros na jogada do jogador humano.
 % Caso falhe o jogador pode repetir a jogada
 % Recebe um jogador, as posições das peças, o tipo de movimento, a board atual e uma flag warnings.
@@ -380,7 +381,8 @@ eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard)
   )
   );false.
 
-% Predicado importante, chamado caso o jogador escolha uma peça rei. Trata de verificar se o movimento da peça rei foi realizado com sucesso e se irá comer peças.
+% Predicado importante na jogada, chamado caso o jogador escolha uma peça rei. Trata de verificar se o movimento da peça rei foi realizado com sucesso e se irá comer peças.
+% Verifica se o jogador com a peca rei move na diagonal, vertical ou horizontal. Apenas podera comer na vertical ou horizontal, nunca na diagonal
 % Recebe um jogador, as posições das peças, a board atual e uma flag warnings. Retorna uma nova board com as peças atualizadas
 % Se warnings == 0, não será mostrado na consola os erros da jogada (Evita sobrecarga no modo jogador computador), se warnings == 1, mostra os erros na jogada do jogador humano.
 % Caso falhe o jogador repetirá a jogada
@@ -404,9 +406,9 @@ verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBo
 % Predicado chamado dentro do verify_king_movement, que apenas verifica se o jogador irá comer alguma peça pelo caminho.
 % Verifica se entre as posicoes escolhidas não tem nenhuma peça sua nem mais que uma peça do adversário, pois so pode comer uma de cada vez.
 % Verifica se o jogador pode comer na vertical e horizontal, nunca na diagonal.
-% Verifica se econtra uma peça do jogador adversário entre as posicoes escolhidas, e caso encontre, a peça a seguir ao do adversário terá de ser vazia.
+% Verifica se econtra uma peça do jogador adversário entre as posicoes escolhidas, e caso encontre, a peça a seguir a esta, terá de ser vazia.
 % Recebe um jogador, as posições das peças, a board atual, uma flag Delta(diferença de peças movidas), uma flag TypeMove(1 movimento horizontal, 2 movimento vertical, 3 movimento diagonal)
-% Recebe tambem um contador que é inicializado a 0 que conta o numero de peças do adversario encontradas nesse movimento, se duas ou mais falha.
+% Recebe tambem um contador que é inicializado a 0 que conta o numero de peças do adversario encontradas nesta jogada, se duas ou mais falha.
 % Caso falhe o jogador repetirá a jogada
 check_king_eating(_,_,_,_,_,_,0,_,0):-true.
 check_king_eating(_,_,_,_,_,_,0,_,1):-true.
@@ -438,6 +440,7 @@ check_king_eating(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,Delta,Typ
 
 % Predicado chamado dentro do verify_king_movement, semelhante ao check_king_eating, que tratará de atualizar a board caso o predicado check_king_eating suceda.
 % Recebe um jogador, as posições das peças, a board atual, uma flag Delta(diferença de peças movidas), uma flag TypeMove(1 movimento horizontal, 2 movimento vertical, 3 movimento diagonal)
+% Retorna a board atualizada
 king_eat(_,_,_,_,_,BoardAtual,NovaBoard,0,_):-NovaBoard = BoardAtual, true.
 king_eat(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Delta,TypeMove):-
   (
@@ -476,7 +479,7 @@ loop_to_check_eaten(Board,Jogador,X,Y,Reply):-
 
       (
         (Peca == p; Peca == b),check_hor_ver_normal_neighbours(Board,Jogador,X,Y);
-        (Peca == rp; Peca == rb), write('X'),check_hor_ver_king_neighbours(Board,Jogador,X,Y)
+        (Peca == rp; Peca == rb),check_hor_ver_king_neighbours(Board,Jogador,X,Y)
       ),flagCheckEated(Reply2),(X < 8, AuxX is X + 1, AuxY is Y;Y < 8, AuxY is Y + 1, AuxX is 1), !,loop_to_check_eaten(Board,Jogador,AuxX,AuxY,Reply2));
     ((X < 8, AuxX is X + 1, AuxY is Y;Y < 8, AuxY is Y + 1, AuxX is 1),!,loop_to_check_eaten(Board,Jogador,AuxX,AuxY,Reply))
   ).
@@ -504,7 +507,7 @@ loop_aux_king(_,_,_,_,0,_):-false.
 loop_aux_king(_,_,_,_,1,_):-true.
 loop_aux_king(Board,Jogador,X,Y,_,Tipo):-
   (
-    (
+    (write('X'),
       (Tipo == 1, (Y > 0, AuxY is Y - 1, AuxX is X,asserta(flagKingEating(AuxY))));
       (Tipo == 2, (X < 8, AuxY is Y, AuxX is X + 1,asserta(flagKingEating(AuxX))));
       (Tipo == 3, (Y < 8, AuxY is Y + 1, AuxX is X,asserta(flagKingEating(AuxY))));
@@ -512,6 +515,10 @@ loop_aux_king(Board,Jogador,X,Y,_,Tipo):-
     ), getElement(Board,AuxY,AuxX,Peca), (((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))),loop_aux_king(Board,Jogador,AuxX,AuxY,1,Tipo),!;loop_aux_king(Board,Jogador,AuxX,AuxY,0,Tipo),!)
   ).
 
+% Predicado importante do joga dentro do check_can_eat_more. No final do predicado joga, caso o jogador tenha comido, vai verificar se pode comer mais peças com uma peca king no modo de jogador humano
+% Recebe um jogador e as posicoes do ultimo movimento. Com estas posicoes este predicado chamara o loop_aux_king para varrer ate encontrar uma peca do adversario, verificando depois se numa casa a seguir a essa peca encontrada está vazia
+% Caso esteja vazia o jogador terá de fazer o movimento, se sucesso mudará a board e é salvado na base de dados do prolog dentro do predicado backBoard
+% Se nao se verificar estas situacoes retorna true que significa que nao pode comer mais pecas.
 check_if_can_eat_more_king(Jogador,Linha,Coluna):-
   (/*Para cima*/
     backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,1),
@@ -554,6 +561,8 @@ check_if_can_eat_more_king(Jogador,Linha,Coluna):-
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king(Jogador,NovaLinha,NovaColuna)
   );true.
 
+% Predicado importante do joga dentro do check_can_eat_more. No final do predicado joga, caso o jogador tenha comido, vai verificar se pode comer mais peças. Tratará de verificar se apos ter comido uma peca pode comer mais com uma peca king no modo de jogador computador
+% É semelhante ao check_if_can_eat_more_king
 check_if_can_eat_more_king_pc(Jogador,Linha,Coluna):-
   (/*Para cima*/
     backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,1),
@@ -600,6 +609,8 @@ check_if_can_eat_more_king_pc(Jogador,Linha,Coluna):-
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king_pc(Jogador,NovaLinha,NovaColuna)
   );true.
 
+% Predicado auxiliar de check_if_can_eat_more_king_pc e check_if_can_eat_more_king que trata de verificar se após a escolha das novas posicoes, estas sao validas
+% Predicado semelhante ao verify_king_movement
 verify_king_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Warnings):-
   (
   AuxLinha is (Linha - NovaLinha),
@@ -615,7 +626,8 @@ verify_king_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,Boar
   );
   ((Warnings == 1, nl,write('!!AVISO!! Tera de comer a peca do adversario'),nl,nl,!,false); !,false).
 
-
+% Predicado auxiliar de verify_king_movement_for_eat_more que trata de verificar as regras ao comer uma peca do adversario
+% Predicado semelhante ao check_king_eating
 check_king_eating_for_eat_more(_,_,_,_,_,_,0,_,1):-true.
 check_king_eating_for_eat_more(_,_,_,_,_,_,0,_,0):-!,false.
 check_king_eating_for_eat_more(_,_,_,_,_,_,_,_,2):-!,false.
@@ -637,7 +649,7 @@ check_king_eating_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAt
     )
   ).
 
-% Predicado importante do joga. No final do predicado joga, caso o jogador tenha comido, vai verificar se pode comer mais peças.
+% Predicado importante do joga dentro do check_can_eat_more. No final do predicado joga, caso o jogador tenha comido, vai verificar se pode comer mais peças com uma peca normal no modo de jogador computador
 % Apos o jogador ter escolhido a nova posicao, este predicado vai verificar nas suas adjacências (Vertical e horizontal) se a peça é do adversario e caso seja do adversario verifica se a peça a seguir a essa é vazia, podendo assim comer essa peça do adversario
 check_if_can_eat_more_simple_pc(Jogador,Linha,Coluna):-
   (/*Para cima*/
@@ -689,7 +701,7 @@ check_if_can_eat_more_simple_pc(Jogador,Linha,Coluna):-
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple_pc(Jogador,NovaLinha,NovaColuna)
   );true.
 
-% Predicado importante do joga. No final do predicado joga, caso o jogador tenha comido, vai verificar se pode comer mais peças.
+% Predicado importante do joga dentro do check_can_eat_more. No final do predicado joga, caso o jogador tenha comido, vai verificar se pode comer mais peças com uma peca normal no modo de jogador humano
 % Apos o jogador ter escolhido a nova posicao, este predicado vai verificar nas suas adjacências (Vertical e horizontal) se a peça é do adversario e caso seja do adversario verifica se a peça a seguir a essa é vazia, podendo assim comer essa peça do adversario
 check_if_can_eat_more_simple(Jogador,Linha,Coluna):-
   (/*Para cima*/
@@ -737,6 +749,8 @@ check_if_can_eat_more_simple(Jogador,Linha,Coluna):-
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple(Jogador,NovaLinha,NovaColuna)
   );true.
 
+% Predicado auxiliar de check_if_can_eat_more_simple_pc e check_if_can_eat_more_simple que trata de verificar se após a escolha das novas posicoes, estas sao validas
+% Predicado semelhante ao verify_movement
 verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Warnings):-
   (
     (
