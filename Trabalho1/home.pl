@@ -85,7 +85,7 @@ info_display(Jogada,Board):-
   format('Jogada numero: ~d', [Jogada]), nl,
   format('Numero de damas brancas: ~w', [Nr_brancas]), nl,
   format('Numero de reis brancos: ~w', [Nr_rei_brancas]), nl,
-  format('Numero de damas pretas: ~w', [Nr_pretas]), nl, nl,
+  format('Numero de damas pretas: ~w', [Nr_pretas]), nl,
   format('Numero de reis pretos: ~w', [Nr_rei_pretas]), nl,nl,nl.
 
 
@@ -148,42 +148,6 @@ end([[rb, none, none, none, none, none, none, none],
 
 
 % =========== Display ===========
-board_display(X,[L2|L2s]) :- write(X),
-  Y is X+1,
-  write('| '),
-  display_line(L2), nl,
-  write(' '),
-  display_underline(L2), nl,
-  board_display(Y,L2s).
-board_display(_,[]) :- nl.
-
-display_line([E|Es]) :- translate(E,V),
-  write(V),
-  write('  | '),
-  display_line(Es).
-display_line([]).
-
-display_underline([_|Es]) :- write('------'), display_underline(Es).
-display_underline([]) :- write(' ').
-
-display_first_line(Inicio, Fim, Board):- write('    '),
-  Y is Inicio + 0,
-  Inicio =< Fim,
-  char_code(Imprime, Y),
-  write(Imprime),
-  write(' '),
-  X is Y +1,
-  display_first_line(X, Fim, Board).
-display_first_line(_, _, Board) :- nl, write(' '), display_underline(Board).
-
-translate(none,'  ').
-translate(p,' P').
-translate(b,' B').
-translate(rp,'rP').
-translate(rb,'rB').
-
-/* OTHER
-% =========== Display ===========
 board_display(X,[L2|L2s]) :-
   display_blank_line(L2),nl,
   write(X),
@@ -224,4 +188,3 @@ translate(p,'P ').
 translate(b,'B ').
 translate(rp,'rP').
 translate(rb,'rB').
-*/
