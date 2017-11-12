@@ -84,9 +84,9 @@ info_display(Jogada,Board):-
   conta_pecas(rp,Board,Nr_rei_pretas),
   format('Jogada numero: ~d', [Jogada]), nl,
   format('Numero de damas brancas: ~w', [Nr_brancas]), nl,
-  format('Numero de reis brancas: ~w', [Nr_rei_brancas]), nl,
-  format('Numero de reis pretos: ~w', [Nr_rei_pretas]), nl,
-  format('Numero de damas pretas: ~w', [Nr_pretas]), nl, nl, nl.
+  format('Numero de reis brancos: ~w', [Nr_rei_brancas]), nl,
+  format('Numero de damas pretas: ~w', [Nr_pretas]), nl, nl,
+  format('Numero de reis pretos: ~w', [Nr_rei_pretas]), nl,nl,nl.
 
 
 % =========== BOARDS ===========
@@ -114,7 +114,7 @@ teste([[none, none, none, none, none, rb, none, rb],
       [none, b, none, b, none, p, none, none],
       [none, p, none, b, b, none, none, none],
       [none, none, none, b, b, p, b, none],
-      [none, none, none, none, b, p, p, b],
+      [none, none, none, none, b, none, p, b],
       [none, none, none, none, none, none, none, none]]).
 
 /*Para multi king a comer*/
@@ -137,24 +137,6 @@ teste3([[none, none, none, none, none, none, none, none],
       [none, none, b, none, none, none, none, none],
       [none, none, none, none, none, none, none, none]]).
 
-end1([[none, none, none, none, none, none, none, none],
-      [none, none, none, b, none, none, none, none],
-      [none, none, none, p, none, none, none, none],
-      [none, b, p, rb, p, b, none, none],
-      [none, none, none, p, none, none, none, none],
-      [none, none, none, b, none, none, none, none],
-      [none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, none, none]]).
-
-end2([[none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, none, none],
-      [none, rp, none, none, none, none, none, none],
-      [none, none, p, none, none, none, none, none],
-      [none, none, p, rb, none, none, none, none],
-      [none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, none, none]]).
-
 end([[rb, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
@@ -162,7 +144,7 @@ end([[rb, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
       [none, none, none, none, none, none, none, none],
-      [none, none, none, none, none, none, none, none]]).
+      [none, none, none, none, none, none, rp, rb]]).
 
 
 % =========== Display ===========

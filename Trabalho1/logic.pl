@@ -13,7 +13,7 @@
 % Tipo 1 - Player vs Player
 % Tipo 2 - Player vs PC
 % Tipo 3 - PC vs PC
-start(Tipo) :- teste(Board),
+start(Tipo) :- initial(Board),
   Jogada is 1,
   ciclo_jogada(Board, Jogada, Tipo).
 
@@ -60,49 +60,6 @@ joga(Jogada, BoardAtual, NovaBoard3, Tipo):-
   !,
   move(Jogador,NovaBoard,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard2),
   check_can_eat_more(Jogador,NovaBoard2,NovaLinha,NovaColuna,Tipo,NovaBoard3).
-
-%Predicado para verificar a jogada no qual o pc pode escolher uma peca perto da sua casa adversária.
-best_play_pc_positions(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual):-
-  asserta(backBoardPC(BoardAtual)), backBoardPC(BackBoard), conta_total_pecas(Jogador, BackBoard, Valor),
-  (Jogador == 1, asserta(bestNewY(9));Jogador == 2, asserta(bestNewY(1))),
-  loop_to_check_best_play(Jogador,_,_,_,_,BackBoard,_,Valor),
-  bestOldX(Coluna),bestOldY(Linha),bestNewX(NovaColuna),bestNewY(NovaLinha),retract(bestOldX(_)),retract(bestOldY(_)),retract(bestNewX(_)),retract(bestNewY(_)).
-
-%Predicado auxiliar do best_play_pc para calcular qual a melhor jogada a devolver
-loop_to_check_best_play(_,_,_,_,_,_,_,0):-true.
-loop_to_check_best_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,BoardNova,_):-
-  FlagEat is 0, asserta(flagEated(FlagEat)),
-  ask_for_type_of_move_pc(TipoDeMov),
-  repeat,
-    ask_for_initial_piece_pc(Linha,Coluna),
-    verify_initial_piece_player_pc(Jogador,Linha,Coluna,BoardAtual),
-  !,
-  verify_if_king_and_not_linear_pc(BoardAtual,Linha,Coluna,FlagKing,TipoDeMov),
-  repeat,
-    ask_for_new_piece_pc(NovaLinha,NovaColuna),
-    verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
-  !,
-  (
-    (FlagKing == 0, verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard,0));
-    (FlagKing == 1, verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,0))
-  ),
-  %format('Linha=~d,Coluna=~d,NovaLinha=~d,NovaColuna=~d',[Linha,Coluna,NovaLinha,NovaColuna]),nl,
-  flagEated(FlagEated),
-    (
-      (FlagEated == 0, loop_to_check_eaten(NovaBoard,Jogador,1,1,0),flagCheckEated(Reply),retract(flagCheckEated(_)),
-        (
-          (Reply == 1, !,false);
-          updateBoard(none,Linha,Coluna,NovaBoard,BoardNova),
-          ((Jogador == 1, (bestNewY(BestNewY), NovaLinha < BestNewY, retract(bestNewY(_)), asserta(bestOldX(Coluna)),asserta(bestOldY(Linha)),asserta(bestNewX(NovaColuna)),asserta(bestNewY(NovaLinha))));
-          (Jogador == 2, (bestNewY(BestNewY), NovaLinha > BestNewY, retract(bestNewY(_)), asserta(bestOldX(Coluna)),asserta(bestOldY(Linha)),asserta(bestNewX(NovaColuna)),asserta(bestNewY(NovaLinha))))),
-          loop_to_check_best_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,BoardNova,Valor2)
-        )
-      );
-      updateBoard(none,Linha,Coluna,NovaBoard,BoardNova),
-      ((Jogador == 1, (bestNewY(BestNewY), NovaLinha < BestNewY, retract(bestNewY(_)), asserta(bestOldX(Coluna)),asserta(bestOldY(Linha)),asserta(bestNewX(NovaColuna)),asserta(bestNewY(NovaLinha))));
-      (Jogador == 2, (bestNewY(BestNewY), NovaLinha > BestNewY, retract(bestNewY(_)), asserta(bestOldX(Coluna)),asserta(bestOldY(Linha)),asserta(bestNewX(NovaColuna)),asserta(bestNewY(NovaLinha))))),
-      conta_total_pecas(Jogador, BoardNova, Valor2), loop_to_check_best_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,BoardNova,Valor2)
-    ).
 
 /***************** Player vs Player *******************/
 % Predicado importante na verificação da jogada no modo jogador humano vs jogador humano. Recebe um jogador e uma board atual
@@ -389,11 +346,11 @@ check_if_is_pieces(_,_,_,_,_,_,0,0).
 check_if_is_pieces(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,DeltaLinha,DeltaColuna):-
   (Jogador == 1,
     (DeltaColuna == 0, DeltaColuna \= DeltaLinha, (Y is Linha - 1, X is Coluna, getElement(BoardAtual,Y,X,Peca), Peca == b, AuxDeltaLinha is DeltaLinha -1, !,check_if_is_pieces(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDeltaLinha, DeltaColuna));
-    (DeltaColuna == DeltaLinha, (Y is Linha - 1, (NovaColuna > Coluna, X is Coluna + 1; X is Coluna - 1), getElement(BoardAtual,Y,X,Peca), Peca == b, AuxDeltaLinha is DeltaLinha - 1, AuxDeltaColuna is DeltaColuna - 1, !,check_if_is_pieces(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDeltaLinha,AuxDeltaColuna))))
+    (DeltaColuna == DeltaLinha, (Y is Linha - 1, ((NovaColuna > Coluna, X is Coluna + 1); (NovaColuna < Coluna,X is Coluna - 1)), getElement(BoardAtual,Y,X,Peca), Peca == b, AuxDeltaLinha is DeltaLinha - 1, AuxDeltaColuna is DeltaColuna - 1, !,check_if_is_pieces(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDeltaLinha,AuxDeltaColuna))))
   );
   (Jogador == 2,
     (DeltaColuna == 0, DeltaColuna \= DeltaLinha,  (Y is Linha + 1, X is Coluna, getElement(BoardAtual,Y,X,Peca), Peca == p, AuxDeltaLinha is DeltaLinha -1, !,check_if_is_pieces(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDeltaLinha,DeltaColuna));
-    (DeltaColuna == DeltaLinha, (Y is Linha + 1, (NovaColuna > Coluna, X is Coluna + 1; X is Coluna - 1), getElement(BoardAtual,Y,X,Peca), Peca == p, AuxDeltaLinha is DeltaLinha - 1, AuxDeltaColuna is DeltaColuna - 1, !,check_if_is_pieces(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDeltaLinha,AuxDeltaColuna))))
+    (DeltaColuna == DeltaLinha, (Y is Linha + 1, ((NovaColuna > Coluna, X is Coluna + 1); (NovaColuna < Coluna,X is Coluna - 1)), getElement(BoardAtual,Y,X,Peca), Peca == p, AuxDeltaLinha is DeltaLinha - 1, AuxDeltaColuna is DeltaColuna - 1, !,check_if_is_pieces(Jogador,Y,X,NovaLinha,NovaColuna,BoardAtual,AuxDeltaLinha,AuxDeltaColuna))))
   );
   !,false.
 
@@ -518,7 +475,7 @@ king_eat(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,Delta,Ty
 % Retorna a resposta em Reply
 % O loop acaba quando encontrar uma peça do adversário que seja possível comer ou caso varra as posições todas e não encontre nenhuma
 loop_to_check_eaten(_,_,_,_,1):-true.
-loop_to_check_eaten(_,_,8,8,0):-true.
+loop_to_check_eaten(_,_,9,9,0):-true.
 loop_to_check_eaten(Board,Jogador,X,Y,Reply):-
   (Flag is 0, asserta(flagCheckEated(Flag)),
     (getElement(Board,Y,X,Peca), ((Jogador == 1, (Peca == b;Peca == rb));(Jogador == 2, (Peca == p;Peca == rp))),
@@ -526,8 +483,8 @@ loop_to_check_eaten(Board,Jogador,X,Y,Reply):-
       (
         (Peca == p; Peca == b),check_hor_ver_normal_neighbours(Board,Jogador,X,Y);
         (Peca == rp; Peca == rb),check_hor_ver_king_neighbours(Board,Jogador,X,Y)
-      ),flagCheckEated(Reply2),(X < 8, AuxX is X + 1, AuxY is Y;Y < 8, AuxY is Y + 1, AuxX is 1), !,loop_to_check_eaten(Board,Jogador,AuxX,AuxY,Reply2));
-    ((X < 8, AuxX is X + 1, AuxY is Y;Y < 8, AuxY is Y + 1, AuxX is 1),!,loop_to_check_eaten(Board,Jogador,AuxX,AuxY,Reply))
+      ),flagCheckEated(Reply2),(X =< 8, AuxX is X + 1, AuxY is Y;Y =< 8, AuxY is Y + 1, AuxX is 1), !,loop_to_check_eaten(Board,Jogador,AuxX,AuxY,Reply2));
+    ((X =< 8, AuxX is X + 1, AuxY is Y;Y =< 8, AuxY is Y + 1, AuxX is 1),!,loop_to_check_eaten(Board,Jogador,AuxX,AuxY,Reply))
   ).
 
 % Predicado auxiliar de loop_to_check_eaten, que verificará se na adjacencia de X e Y existe uma peça do adversário que seja possível come-la e alterará a flag presente do predicado flagCheckEated.
@@ -549,7 +506,10 @@ check_hor_ver_king_neighbours(Board,Jogador,X,Y):-
   ).
 
 % Predicado auxiliar de check_hor_ver_king_neighbours que irá varrer a posicao X e Y na vertical ou horizontal a procura de uma peça do adversário, retornando a posicao coluna ou linha desta peça no predicado flagKingEating dependendo do tipo.
-loop_aux_king(_,_,_,_,0,_):-false.
+loop_aux_king(_,_,_,0,0,_):-false.
+loop_aux_king(_,_,_,8,0,_):-false.
+loop_aux_king(_,_,0,_,0,_):-false.
+loop_aux_king(_,_,8,_,0,_):-false.
 loop_aux_king(_,_,_,_,1,_):-true.
 loop_aux_king(Board,Jogador,X,Y,_,Tipo):-
   (
@@ -558,8 +518,10 @@ loop_aux_king(Board,Jogador,X,Y,_,Tipo):-
       (Tipo == 2, (X < 8, AuxY is Y, AuxX is X + 1,asserta(flagKingEating(AuxX))));
       (Tipo == 3, (Y < 8, AuxY is Y + 1, AuxX is X,asserta(flagKingEating(AuxY))));
       (Tipo == 4, (X > 0, AuxY is Y, AuxX is X - 1,asserta(flagKingEating(AuxX))))
-    ), getElement(Board,AuxY,AuxX,Peca), format('DENTRO,Y=~d,X=~d,Peca=~w',[AuxY,AuxX,Peca]),nl, (((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))),!,loop_aux_king(Board,Jogador,AuxX,AuxY,1,Tipo),!;!,loop_aux_king(Board,Jogador,AuxX,AuxY,0,Tipo),!)
+    ), getElement(Board,AuxY,AuxX,Peca), /*format('DENTRO,Y=~d,X=~d,Peca=~w',[AuxY,AuxX,Peca]),nl,*/ ((Peca == none, loop_aux_king(Board,Jogador,AuxX,AuxY,0,Tipo),!);((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))),loop_aux_king(Board,Jogador,AuxX,AuxY,1,Tipo),!)
   ).
+
+% (getElement(Board,AuxY,AuxX,Peca), format('DENTRO,Y=~d,X=~d,Peca=~w',[AuxY,AuxX,Peca]),nl, ((Jogador == 1,(Peca == p; Peca == rp));(Jogador == 2,(Peca == b; Peca == rb))),loop_aux_king(Board,Jogador,AuxX,AuxY,1,Tipo),!;loop_aux_king(Board,Jogador,AuxX,AuxY,0,Tipo),!)
 
 % Predicado importante do joga dentro do check_can_eat_more. No final do predicado joga, caso o jogador tenha comido, vai verificar se pode comer mais peças com uma peca king no modo de jogador humano
 % Recebe um jogador e as posicoes do ultimo movimento. Com estas posicoes este predicado chamara o loop_aux_king para varrer ate encontrar uma peca do adversario, verificando depois se numa casa a seguir a essa peca encontrada está vazia
@@ -567,8 +529,8 @@ loop_aux_king(Board,Jogador,X,Y,_,Tipo):-
 % Se nao se verificar estas situacoes retorna true que significa que nao pode comer mais pecas.
 check_if_can_eat_more_king(Jogador,Linha,Coluna):-
   (/*Para cima*/
-    backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,1),write('sai'),nl,
-    flagKingEating(AuxY2), AuxLinha is AuxY2 - 1, retract(flagKingEating(_)), getElement(BoardAtual,AuxLinha,Coluna,Peca), format('Y=~d,X=~d,Peca=~w',[AuxLinha,Coluna,Peca]),nl, Peca == none, display_board(BoardAtual), write('CIMA-Tera de comer a peca do advesario'),nl,
+    backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,1),
+    flagKingEating(AuxY2), AuxLinha is AuxY2 - 1, retract(flagKingEating(_)), getElement(BoardAtual,AuxLinha,Coluna,Peca), /*format('Y=~d,X=~d,Peca=~w',[AuxLinha,Coluna,Peca]),nl,*/ Peca == none, display_board(BoardAtual), write('CIMA-Tera de comer a peca do advesario'),nl,
     repeat,
       ask_for_new_piece(NovaLinha,NovaColuna),
       verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
@@ -577,8 +539,8 @@ check_if_can_eat_more_king(Jogador,Linha,Coluna):-
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king(Jogador,NovaLinha,NovaColuna)
   );
   (/*Para Baixo*/
-    backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,3),write('sai'),nl,
-    flagKingEating(AuxY2), AuxLinha is AuxY2 + 1, retract(flagKingEating(_)), getElement(BoardAtual,AuxLinha,Coluna,Peca), format('Y=~d,X=~d,Peca=~w',[AuxLinha,Coluna,Peca]),nl, Peca == none, display_board(BoardAtual), write('BAIXO-Tera de comer a peca do advesario'),nl,
+    backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,3),
+    flagKingEating(AuxY2), AuxLinha is AuxY2 + 1, retract(flagKingEating(_)), getElement(BoardAtual,AuxLinha,Coluna,Peca), /*format('Y=~d,X=~d,Peca=~w',[AuxLinha,Coluna,Peca]),nl,*/ Peca == none, display_board(BoardAtual), write('BAIXO-Tera de comer a peca do advesario'),nl,
     repeat,
       ask_for_new_piece(NovaLinha,NovaColuna),
       verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
@@ -587,8 +549,8 @@ check_if_can_eat_more_king(Jogador,Linha,Coluna):-
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king(Jogador,NovaLinha,NovaColuna)
   );
   (/*Para Direita*/
-    backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,2),write('sai'),nl,
-    flagKingEating(AuxX2), AuxColuna is AuxX2 + 1, retract(flagKingEating(_)), getElement(BoardAtual,Linha,AuxColuna,Peca), format('Y=~d,X=~d,Peca=~w',[Linha,AuxColuna,Peca]),nl, Peca == none, display_board(BoardAtual), write('DIREITA-Tera de comer a peca do advesario'),nl,
+    backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,2),
+    flagKingEating(AuxX2), AuxColuna is AuxX2 + 1, retract(flagKingEating(_)), getElement(BoardAtual,Linha,AuxColuna,Peca), /*format('Y=~d,X=~d,Peca=~w',[Linha,AuxColuna,Peca]),nl,*/ Peca == none, display_board(BoardAtual), write('DIREITA-Tera de comer a peca do advesario'),nl,
     repeat,
       ask_for_new_piece(NovaLinha,NovaColuna),
       verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
@@ -597,8 +559,8 @@ check_if_can_eat_more_king(Jogador,Linha,Coluna):-
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king(Jogador,NovaLinha,NovaColuna)
   );
   (/*Para Esquerda*/
-    backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,4),write('sai'),nl,
-    flagKingEating(AuxX2), AuxColuna is AuxX2 - 1, retract(flagKingEating(_)), getElement(BoardAtual,Linha,AuxColuna,Peca), format('Y=~d,X=~d,Peca=~w',[Linha,AuxColuna,Peca]),nl, Peca == none, display_board(BoardAtual), write('ESQUERDA-Tera de comer a peca do advesario'),nl,
+    backBoard(BoardAtual), loop_aux_king(BoardAtual,Jogador,Coluna,Linha,0,4),
+    flagKingEating(AuxX2), AuxColuna is AuxX2 - 1, retract(flagKingEating(_)), getElement(BoardAtual,Linha,AuxColuna,Peca), /*format('Y=~d,X=~d,Peca=~w',[Linha,AuxColuna,Peca]),nl,*/ Peca == none, display_board(BoardAtual), write('ESQUERDA-Tera de comer a peca do advesario'),nl,
     repeat,
       ask_for_new_piece(NovaLinha,NovaColuna),
       verifiy_new_piece_player(NovaLinha,NovaColuna,BoardAtual),
@@ -618,7 +580,7 @@ check_if_can_eat_more_king_pc(Jogador,Linha,Coluna):-
       verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
       verify_king_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
     !,
-    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
+    info_jogada_pc(2,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king_pc(Jogador,NovaLinha,NovaColuna)
   );
   (/*Para Baixo*/
@@ -629,7 +591,7 @@ check_if_can_eat_more_king_pc(Jogador,Linha,Coluna):-
       verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
       verify_king_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
     !,
-    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
+    info_jogada_pc(2,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king_pc(Jogador,NovaLinha,NovaColuna)
   );
   (/*Para Direita*/
@@ -640,7 +602,7 @@ check_if_can_eat_more_king_pc(Jogador,Linha,Coluna):-
       verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
       verify_king_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
     !,
-    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
+    info_jogada_pc(2,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king_pc(Jogador,NovaLinha,NovaColuna)
   );
   (/*Para Esquerda*/
@@ -651,7 +613,7 @@ check_if_can_eat_more_king_pc(Jogador,Linha,Coluna):-
       verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
       verify_king_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
     !,
-    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
+    info_jogada_pc(2,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_king_pc(Jogador,NovaLinha,NovaColuna)
   );true.
 
@@ -707,7 +669,7 @@ check_if_can_eat_more_simple_pc(Jogador,Linha,Coluna):-
       verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
       verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
     !,
-    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
+    info_jogada_pc(2,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple_pc(Jogador,NovaLinha,NovaColuna)
   );
   (/*Para Baixo*/
@@ -719,7 +681,7 @@ check_if_can_eat_more_simple_pc(Jogador,Linha,Coluna):-
       verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
       verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
     !,
-    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
+    info_jogada_pc(2,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple_pc(Jogador,NovaLinha,NovaColuna)
   );
   (/*Para Direita*/
@@ -731,7 +693,7 @@ check_if_can_eat_more_simple_pc(Jogador,Linha,Coluna):-
       verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
       verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
     !,
-    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
+    info_jogada_pc(2,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple_pc(Jogador,NovaLinha,NovaColuna)
   );
   (/*Para Esquerda*/
@@ -743,7 +705,7 @@ check_if_can_eat_more_simple_pc(Jogador,Linha,Coluna):-
       verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
       verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard2,0),
     !,
-    info_jogada_pc(1,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
+    info_jogada_pc(2,Jogador,Linha,Coluna,NovaLinha,NovaColuna),
     move(Jogador,NovaBoard2,Linha,Coluna,NovaLinha,NovaColuna,NovaBoard), retract(backBoard(_)), asserta(backBoard(NovaBoard)),!,check_if_can_eat_more_simple_pc(Jogador,NovaLinha,NovaColuna)
   );true.
 
@@ -806,3 +768,46 @@ verify_movement_for_eat_more(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtua
     ((Aux1 == 0; Aux1 == 2; Aux1 == -2), AuxColuna2 \= 1, eat_piece_simple(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard))
   );
   ((Warnings == 1, nl,write('!!AVISO!! Tera de comer a peca do adversario'),nl,nl,!,false);(!,false)).
+
+%Predicado para verificar a jogada no qual o pc pode escolher uma peca perto da sua casa adversária.
+best_play_pc_positions(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual):-
+  asserta(backBoardPC(BoardAtual)), backBoardPC(BackBoard), conta_total_pecas(Jogador, BackBoard, Valor),
+  (Jogador == 1, asserta(bestNewY(9));Jogador == 2, asserta(bestNewY(1))),
+  loop_to_check_best_play(Jogador,_,_,_,_,BackBoard,_,Valor),
+  bestOldX(Coluna),bestOldY(Linha),bestNewX(NovaColuna),bestNewY(NovaLinha),retract(bestOldX(_)),retract(bestOldY(_)),retract(bestNewX(_)),retract(bestNewY(_)).
+
+%Predicado auxiliar do best_play_pc para calcular qual as melhores posições a devolver
+loop_to_check_best_play(_,_,_,_,_,_,_,0):-true.
+loop_to_check_best_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,BoardNova,_):-
+  FlagEat is 0, asserta(flagEated(FlagEat)),
+  ask_for_type_of_move_pc(TipoDeMov),
+  repeat,
+    ask_for_initial_piece_pc(Linha,Coluna),
+    verify_initial_piece_player_pc(Jogador,Linha,Coluna,BoardAtual),
+  !,
+  verify_if_king_and_not_linear_pc(BoardAtual,Linha,Coluna,FlagKing,TipoDeMov),
+  repeat,
+    ask_for_new_piece_pc(NovaLinha,NovaColuna),
+    verifiy_new_piece_player_pc(NovaLinha,NovaColuna,BoardAtual),
+  !,
+  (
+    (FlagKing == 0, verify_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,TipoDeMov,BoardAtual,NovaBoard,0));
+    (FlagKing == 1, verify_king_movement(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,NovaBoard,0))
+  ),
+  %format('Linha=~d,Coluna=~d,NovaLinha=~d,NovaColuna=~d',[Linha,Coluna,NovaLinha,NovaColuna]),nl,
+  flagEated(FlagEated),
+    (
+      (FlagEated == 0, loop_to_check_eaten(NovaBoard,Jogador,1,1,0),flagCheckEated(Reply),retract(flagCheckEated(_)),
+        (
+          (Reply == 1, !,false);
+          updateBoard(none,Linha,Coluna,NovaBoard,BoardNova),
+          ((Jogador == 1, (bestNewY(BestNewY), NovaLinha < BestNewY, retract(bestNewY(_)), asserta(bestOldX(Coluna)),asserta(bestOldY(Linha)),asserta(bestNewX(NovaColuna)),asserta(bestNewY(NovaLinha))));
+          (Jogador == 2, (bestNewY(BestNewY), NovaLinha > BestNewY, retract(bestNewY(_)), asserta(bestOldX(Coluna)),asserta(bestOldY(Linha)),asserta(bestNewX(NovaColuna)),asserta(bestNewY(NovaLinha))))),
+          loop_to_check_best_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,BoardNova,Valor2)
+        )
+      );
+      updateBoard(none,Linha,Coluna,NovaBoard,BoardNova),
+      ((Jogador == 1, (bestNewY(BestNewY), NovaLinha < BestNewY, retract(bestNewY(_)), asserta(bestOldX(Coluna)),asserta(bestOldY(Linha)),asserta(bestNewX(NovaColuna)),asserta(bestNewY(NovaLinha))));
+      (Jogador == 2, (bestNewY(BestNewY), NovaLinha > BestNewY, retract(bestNewY(_)), asserta(bestOldX(Coluna)),asserta(bestOldY(Linha)),asserta(bestNewX(NovaColuna)),asserta(bestNewY(NovaLinha))))),
+      conta_total_pecas(Jogador, BoardNova, Valor2), loop_to_check_best_play(Jogador,Linha,Coluna,NovaLinha,NovaColuna,BoardAtual,BoardNova,Valor2)
+    ).
