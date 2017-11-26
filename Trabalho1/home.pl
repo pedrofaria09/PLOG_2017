@@ -41,13 +41,13 @@ check_in_mode_menu(2):- start(2).
 check_in_mode_menu(3):- start(3).
 
 display_game_area(Board,Jogada):-
-  %cls,
+  cls,
   display_first_line("A","H",Board), nl,
   board_display(1,Board),
   info_display(Jogada,Board).
 
 display_game_area_pc(Board,Jogada):-
-  %cls,
+  cls,
   display_first_line("A","H",Board), nl,
   board_display(1,Board),
   info_display(Jogada,Board),
