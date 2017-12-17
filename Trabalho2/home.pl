@@ -1,20 +1,30 @@
 :-use_module(library(clpfd)).
 :-use_module(library(lists)).
+:-use_module(library(random)).
 
 %====== STATIC WAY ======
-magic:-
-L1=9,
-L2=7,
-L3=2,
-L4=10,
-L5=3,
-L6=1,
-R1=4,
-R2=8,
-R3=4,
-R4=5,
-R5=6,
-R6=5,
+main:-
+  getRandoms(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6),write(L1),write(' - '),write(L2),nl,
+  magic(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6);write(1),main.
+
+getRandoms(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6):-
+  random(1,11,L1),
+  random(1,11,L2),
+  random(1,11,L3),
+  random(1,11,L4),
+  random(1,11,L5),
+  random(1,11,L6),
+  random(1,11,R1),
+  random(1,11,R2),
+  random(1,11,R3),
+  random(1,11,R4),
+  random(1,11,R5),
+  random(1,11,R6).
+
+magic(Vars2):-
+
+Valores=[L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6],
+domain(Valores,1,10),
 
 append([[L1],[L2],[L3],[L4],[L5],[L6]],Linhas),
 append([[R1],[R2],[R3],[R4],[R5],[R6]],Colunas),
@@ -78,9 +88,11 @@ verifylist(Coluna6,SubColuna6),
 sum(SubColuna6,#=,R6),
 
 append([Linha1,Linha2,Linha3,Linha4,Linha5,Linha6],Vars),
+append(Linhas,Colunas,Vars2),
+append(Vars,Vars2,Vars3),
 
 reset_timer,
-labeling([],Vars),
+labeling([],Vars2),
 printValues(Vars,Linhas,Colunas),
 print_time.
 
