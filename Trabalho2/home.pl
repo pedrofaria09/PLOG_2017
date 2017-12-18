@@ -119,7 +119,9 @@ printValuesValores([A1,A2,A3,A4,A5,A6|Resto],[Linha|RestoLinhas]):-
   translate(A4,X4),
   translate(A5,X5),
   translate(A6,X6),
-  format('~d | ~w | ~w | ~w | ~w | ~w | ~w |~N',[Linha,X1,X2,X3,X4,X5,X6]),
+  ite(Linha < 10,
+    format(' ~d | ~w | ~w | ~w | ~w | ~w | ~w |~N',[Linha,X1,X2,X3,X4,X5,X6]),
+    format('~d | ~w | ~w | ~w | ~w | ~w | ~w |~N',[Linha,X1,X2,X3,X4,X5,X6])),
   write('   -------------------------'),nl,
   printValuesValores(Resto,RestoLinhas).
 
@@ -136,3 +138,7 @@ translate(1,'1').
 translate(2,'2').
 translate(3,'3').
 translate(4,'4').
+
+%Utils
+ite(If,Then,_):-If,!,Then.
+ite(_,_,Else):-Else.
