@@ -3,25 +3,7 @@
 :-use_module(library(random)).
 
 %====== STATIC WAY ======
-main:-
-  getRandoms(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6),write(L1),write(' - '),write(L2),nl,
-  magic(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6);write(1),main.
-
-getRandoms(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6):-
-  random(1,11,L1),
-  random(1,11,L2),
-  random(1,11,L3),
-  random(1,11,L4),
-  random(1,11,L5),
-  random(1,11,L6),
-  random(1,11,R1),
-  random(1,11,R2),
-  random(1,11,R3),
-  random(1,11,R4),
-  random(1,11,R5),
-  random(1,11,R6).
-
-magic(Vars2):-
+magic(Vars3):-
 
 Valores=[L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6],
 domain(Valores,1,10),
@@ -92,7 +74,7 @@ append(Linhas,Colunas,Vars2),
 append(Vars,Vars2,Vars3),
 
 reset_timer,
-labeling([],Vars2),
+labeling([],Vars3),
 printValues(Vars,Linhas,Colunas),
 print_time.
 
@@ -137,8 +119,7 @@ printValuesValores([A1,A2,A3,A4,A5,A6|Resto],[Linha|RestoLinhas]):-
   translate(A4,X4),
   translate(A5,X5),
   translate(A6,X6),
-  ((Linha < 10,format(' ~d | ~w | ~w | ~w | ~w | ~w | ~w |~N',[Linha,X1,X2,X3,X4,X5,X6]));
-  format('~d | ~w | ~w | ~w | ~w | ~w | ~w |~N',[Linha,X1,X2,X3,X4,X5,X6])),
+  format('~d | ~w | ~w | ~w | ~w | ~w | ~w |~N',[Linha,X1,X2,X3,X4,X5,X6]),
   write('   -------------------------'),nl,
   printValuesValores(Resto,RestoLinhas).
 
