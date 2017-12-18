@@ -213,9 +213,9 @@ printValuesValores([A1,A2,A3,A4,A5,A6|Resto],[Linha|RestoLinhas]):-
 
 printValuesDynamic(Vars,Linhas,Colunas,Tamanho):-
   nl,
-  write('      '),
+  write('     '),
   print_primeira(Colunas),nl,
-  write('    '), print_tracos(Tamanho),write('-'), nl,
+  write('   '), print_tracos(Tamanho),write('-'), nl,
   ciclo_imprime(Vars,Linhas,Tamanho,Tamanho,1).
 
 print_tracos(0).
@@ -229,7 +229,7 @@ ciclo_imprime(_,_,0,_,_).
 ciclo_imprime(Vars,Linhas,Tamanho,TamFixo,AtualLine):-
   Tamanho>0, nth1(AtualLine,Linhas,ValorLinha),
   it(ValorLinha < 10,write(' ')), write(ValorLinha), write(' |'), take(TamFixo,Vars,LinhaPrint), print_linha(LinhaPrint), nl,
-  write('    '), print_tracos(TamFixo),write('-'), nl,
+  write('   '), print_tracos(TamFixo),write('-'), nl,
   M is Tamanho-1, Aux is AtualLine + 1, append(LinhaPrint,Res,Vars),ciclo_imprime(Res,Linhas,M,TamFixo,Aux).
 
 take(N, _, Xs) :- N =< 0, !, N =:= 0, Xs = [].
