@@ -3,6 +3,7 @@
 
 %====== STATIC WAY ======
 exemplo_enunciado:-
+  % Atribuicao das variaveis para o tabuleiro do enunciado
   L1=9,
   L2=7,
   L3=2,
@@ -18,8 +19,12 @@ exemplo_enunciado:-
   solve_puzzle(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6,_).
 
 todas_solucoes_66(Vars3):-
+  % Atribuicao das variaveis para o tabuleiro 6*6
   Valores=[L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6],
+
+  % Atribuicao do dominio aos valores das variaveis das linhas e colunas
   domain(Valores,1,10),
+
   solve_puzzle(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6,Vars3).
 
 solve_puzzle(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6,Vars3):-
@@ -27,6 +32,7 @@ solve_puzzle(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6,Vars3):-
   append([[L1],[L2],[L3],[L4],[L5],[L6]],Linhas),
   append([[R1],[R2],[R3],[R4],[R5],[R6]],Colunas),
 
+  % Atribuicao das variaveis as linhas e colunas
   Linha1=[A1,A2,A3,A4,A5,A6],
   Linha2=[B1,B2,B3,B4,B5,B6],
   Linha3=[C1,C2,C3,C4,C5,C6],
@@ -40,6 +46,7 @@ solve_puzzle(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6,Vars3):-
   Coluna5=[A5,B5,C5,D5,E5,F5],
   Coluna6=[A6,B6,C6,D6,E6,F6],
 
+  % Atribuicao do dominio às linhas do tabuleiro
   domain(Linha1,-1,4),
   domain(Linha2,-1,4),
   domain(Linha3,-1,4),
@@ -47,6 +54,7 @@ solve_puzzle(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6,Vars3):-
   domain(Linha5,-1,4),
   domain(Linha6,-1,4),
 
+  % Atribuicao distintas das linhas e colunas
   all_distinct(Linha1),
   all_distinct(Linha2),
   all_distinct(Linha3),
@@ -60,7 +68,9 @@ solve_puzzle(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6,Vars3):-
   all_distinct(Coluna5),
   all_distinct(Coluna6),
 
+  % Retorna uma lista com os valores entre 0 ou -1 a -1 ou 0 Ex: 1 -1 2 3 0 4 - [2 3] é a lista retornada
   verifylist(Linha1,SubLinha1),
+  % Verifica se a soma da lista retornada do verifylist é igual ao valor da linha correspondente
   sum(SubLinha1,#=,L1),
   verifylist(Linha2,SubLinha2),
   sum(SubLinha2,#=,L2),
@@ -97,19 +107,39 @@ solve_puzzle(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6,Vars3):-
 
 %====== DYNAMIC WAY ======
 solve_dynamic(Tamanho,Vars):-
+  % T corresponde ao tamanho da lista - 2
   T is Tamanho-2,
+
+  % R corresponde ao Tamanho * (Tamanho+1) / 2
   max_number(T,R),
+
+  % Converte para numero inteiro
   NewR is round(R),
+
+  % Atribuicao das variaveis as linhas e colunas
   length(Linhas,Tamanho),
   length(Colunas,Tamanho),
   append(Linhas,Colunas,Valores),
+
+  % Atribuicao do dominio aos valores das variaveis das linhas e colunas
   domain(Valores,1,NewR),
 
+  % Gera matrix Tamanho por Tamanho
   generate_matrix(Tamanho, Tamanho, Matrix),
+
+  % Atribuicao do dominio às linhas do tabuleiro
   domainrowloop(Tamanho,T,Matrix),
+
+  % Atribuicao distintas das linhas
   rowloop(Tamanho,Matrix),
+
+  % Atribuicao distintas das colunas
   colloop(Tamanho,Matrix),
+
+  % Verifica se em cada linha a soma dos valores entre 0 ou -1 a -1 ou 0 é igual ao valor da variavel da linha
   verifyrowloop(Tamanho,Matrix,Linhas),
+
+  % Verifica se em cada coluna a soma dos valores entre 0 ou -1 a -1 ou 0 é igual ao valor da variavel da coluna
   verifycolloop(Tamanho,Matrix,Colunas),
 
   appendrowloop(Tamanho,Matrix,[],Vars),
@@ -121,6 +151,7 @@ solve_dynamic(Tamanho,Vars):-
   printValuesDynamic(Vars,Linhas,Colunas,Tamanho),
   print_time.
 
+% === AUX FOR DYNAMIC ====
 domainrowloop(0,_,_).
 domainrowloop(N,Tamanho,Matrix) :-
   N>0, nth1(N,Matrix,L), domain(L,-1,Tamanho), M is N-1, domainrowloop(M,Tamanho,Matrix).
