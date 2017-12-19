@@ -3,7 +3,7 @@
 
 %====== STATIC WAY ======
 exemplo_enunciado:-
-  % Atribuicao das variaveis a calcular a soma das linhas e colunas para o tabuleiro do enunciado
+  % Atribuicao do valor inicial a cada linha e coluna, correspondendo à soma dos valores entre as casas pretas (tabuleiro do enunciado)
   L1=9,
   L2=7,
   L3=2,
@@ -19,7 +19,7 @@ exemplo_enunciado:-
   solve_puzzle(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6,_).
 
 todas_solucoes_66(Vars3):-
-  % Atribuicao das variaveis a calcular a soma das linhas e colunas para o tabuleiro 6*6
+  % Variaveis a calcular para cada linha e coluna, correspondendo à soma dos valores entre as casas pretas
   Valores=[L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6],
 
   % Atribuicao do dominio aos valores das variaveis das linhas e colunas
@@ -46,7 +46,7 @@ solve_puzzle(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6,Vars3):-
   Coluna5=[A5,B5,C5,D5,E5,F5],
   Coluna6=[A6,B6,C6,D6,E6,F6],
 
-  % Atribuicao do dominio às linhas do tabuleiro
+  % Atribuicao do dominio às variáveis
   domain(Linha1,-1,4),
   domain(Linha2,-1,4),
   domain(Linha3,-1,4),
@@ -54,7 +54,7 @@ solve_puzzle(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6,Vars3):-
   domain(Linha5,-1,4),
   domain(Linha6,-1,4),
 
-  % Atribuicao distintas das linhas e colunas
+  % Restrição do problema, obrigando os valores presentes em cada linha e coluna a serem diferentes
   all_distinct(Linha1),
   all_distinct(Linha2),
   all_distinct(Linha3),
@@ -68,9 +68,9 @@ solve_puzzle(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6,Vars3):-
   all_distinct(Coluna5),
   all_distinct(Coluna6),
 
-  % Retorna uma lista com os valores entre 0 ou -1 a -1 ou 0 Ex: 1 -1 2 3 0 4 - [2 3] é a lista retornada - Necessario para todas as linhas e colunas
+  % Retorna uma lista com os valores entre as casas pretas (0 ou -1) Ex: 1 -1 2 3 0 4 - [2 3] é a lista retornada - Necessario para todas as linhas e colunas
   verifylist(Linha1,SubLinha1),
-  % Verifica se a soma da lista retornada do verifylist é igual ao valor da linha correspondente - Necessario para todas as linhas e colunas
+  % Verifica se a soma dos valores presentes na lista retornada pelo predicado verifylist é igual ao valor da linha correspondente - Necessario para todas as linhas e colunas
   sum(SubLinha1,#=,L1),
   verifylist(Linha2,SubLinha2),
   sum(SubLinha2,#=,L2),
@@ -100,9 +100,10 @@ solve_puzzle(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6,Vars3):-
   append(Vars,Vars2,Vars3),
 
   reset_timer,
-  labeling([],Vars3),
+  labeling([ffc],Vars3),
   printValues(Vars,Linhas,Colunas),
-  print_time.
+  print_time,
+  fd_statistics.
 
 
 %====== DYNAMIC WAY ======
@@ -110,36 +111,36 @@ solve_dynamic(Tamanho,Vars):-
   % T corresponde ao tamanho da lista - 2
   T is Tamanho-2,
 
-  % R corresponde ao Tamanho * (Tamanho+1) / 2
+  % R corresponde ao Tamanho * (Tamanho+1) / 2 (corresponde à soma de todos os valores de 1 até Tamanho)
   max_number(T,R),
 
   % Converte para numero inteiro
   NewR is round(R),
 
-  % Atribuicao das variaveis a calcular a soma das linhas e colunas
+  % Definição do número de valores iniciais para as linhas e colunas
   length(Linhas,Tamanho),
   length(Colunas,Tamanho),
   append(Linhas,Colunas,Valores),
 
-  % Atribuicao do dominio aos valores das variaveis das linhas e colunas
+  % Restrição de dominio aos valores que são inicialmente afetos às linhas colunas (correspondendo à soma dos valores entre as casas pretas)
   domain(Valores,1,NewR),
 
   % Gera matriz Tamanho por Tamanho
   generate_matrix(Tamanho, Tamanho, Matrix),
 
-  % Atribuicao do dominio às linhas do tabuleiro
+  % Restrição de dominio às linhas do tabuleiro
   domainrowloop(Tamanho,T,Matrix),
 
-  % Atribuicao distintas das linhas
+  % Restrição all_distinct aos valores presentes em todas as linhas
   rowloop(Tamanho,Matrix),
 
-  % Atribuicao distintas das colunas
+  % Restrição all_distinct aos valores presentes em todas as colunas
   colloop(Tamanho,Matrix),
 
-  % Verifica se em cada linha a soma dos valores entre 0 ou -1 a -1 ou 0 é igual ao valor da variavel da linha
+  % Verifica se em cada linha a soma dos valores entre as casas pretas (0 ou -1) é igual ao valor da variavel da linha
   verifyrowloop(Tamanho,Matrix,Linhas),
 
-  % Verifica se em cada coluna a soma dos valores entre 0 ou -1 a -1 ou 0 é igual ao valor da variavel da coluna
+  % Verifica se em cada coluna a soma dos valores entre as casas pretas (0 ou -1) é igual ao valor da variavel da coluna
   verifycolloop(Tamanho,Matrix,Colunas),
 
   appendrowloop(Tamanho,Matrix,[],Vars),
@@ -147,9 +148,10 @@ solve_dynamic(Tamanho,Vars):-
   append(Vars,Vars2,Vars3),
 
   reset_timer,
-  labeling([],Vars3),
+  labeling([ffc],Vars3),
   printValuesDynamic(Vars,Linhas,Colunas,Tamanho),
-  print_time.
+  print_time,
+  fd_statistics.
 
 % === AUX FOR DYNAMIC ====
 domainrowloop(0,_,_).
