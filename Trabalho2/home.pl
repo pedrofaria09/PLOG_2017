@@ -3,7 +3,7 @@
 
 %====== STATIC WAY ======
 exemplo_enunciado:-
-  % Atribuicao das variaveis para o tabuleiro do enunciado
+  % Atribuicao das variaveis a calcular a soma das linhas e colunas para o tabuleiro do enunciado
   L1=9,
   L2=7,
   L3=2,
@@ -19,7 +19,7 @@ exemplo_enunciado:-
   solve_puzzle(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6,_).
 
 todas_solucoes_66(Vars3):-
-  % Atribuicao das variaveis para o tabuleiro 6*6
+  % Atribuicao das variaveis a calcular a soma das linhas e colunas para o tabuleiro 6*6
   Valores=[L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6],
 
   % Atribuicao do dominio aos valores das variaveis das linhas e colunas
@@ -68,9 +68,9 @@ solve_puzzle(L1,L2,L3,L4,L5,L6,R1,R2,R3,R4,R5,R6,Vars3):-
   all_distinct(Coluna5),
   all_distinct(Coluna6),
 
-  % Retorna uma lista com os valores entre 0 ou -1 a -1 ou 0 Ex: 1 -1 2 3 0 4 - [2 3] é a lista retornada
+  % Retorna uma lista com os valores entre 0 ou -1 a -1 ou 0 Ex: 1 -1 2 3 0 4 - [2 3] é a lista retornada - Necessario para todas as linhas e colunas
   verifylist(Linha1,SubLinha1),
-  % Verifica se a soma da lista retornada do verifylist é igual ao valor da linha correspondente
+  % Verifica se a soma da lista retornada do verifylist é igual ao valor da linha correspondente - Necessario para todas as linhas e colunas
   sum(SubLinha1,#=,L1),
   verifylist(Linha2,SubLinha2),
   sum(SubLinha2,#=,L2),
@@ -116,7 +116,7 @@ solve_dynamic(Tamanho,Vars):-
   % Converte para numero inteiro
   NewR is round(R),
 
-  % Atribuicao das variaveis as linhas e colunas
+  % Atribuicao das variaveis a calcular a soma das linhas e colunas
   length(Linhas,Tamanho),
   length(Colunas,Tamanho),
   append(Linhas,Colunas,Valores),
@@ -124,7 +124,7 @@ solve_dynamic(Tamanho,Vars):-
   % Atribuicao do dominio aos valores das variaveis das linhas e colunas
   domain(Valores,1,NewR),
 
-  % Gera matrix Tamanho por Tamanho
+  % Gera matriz Tamanho por Tamanho
   generate_matrix(Tamanho, Tamanho, Matrix),
 
   % Atribuicao do dominio às linhas do tabuleiro
